@@ -1,9 +1,11 @@
 <script>
   import { page } from '$app/stores';
   import Icons from '$components/Icons.svelte';
+  import Logo from '$lib/assets/logo.png'
   //import { cartQuantity } from '../store';
   import SearchBar from '$components/SearchBar.svelte';
   import { createEventDispatcher } from 'svelte';
+	import { LightSwitch } from '@skeletonlabs/skeleton';
 
   const dispatch = createEventDispatcher();
 
@@ -11,10 +13,10 @@
 
   let showMenu = false;
 
-  let tabs = [
-    { name: 'All', path: '/search' },
-    { name: 'Featured', path: '/search/featured' },
-    { name: 'Apparel', path: '/search/clothes' }
+  let   tabs = [
+    { name: 'Home', path: '/home' },
+    { name: 'Settings', path: '/settings' },
+    //{ name: 'Apparel', path: '/search/clothes' }
   ];
   function openCart() {
     showMenu = false;
@@ -26,18 +28,18 @@
   <div class="flex w-1/3 items-center">
     <div class="mr-4" class:active={currentRoute === '/'}>
       <a href="/" data-sveltekit-prefetch class="">
-        <!-- <picture>
-          <source srcset="/svelte_logo.png" type="image/png" />
+        <picture>
+          <source srcset={Logo} type="image/png" />
           <img
             alt="Svelte Logo"
             class="h-[38] w-[32]"
             decoding="async"
             height={38}
             loading="eager"
-            src="/svelte_logo.png"
+            src={Logo}
             width={32}
           />
-        </picture> -->
+        </picture>
       </a>
     </div>
     <div class="hidden lg:flex">
@@ -57,9 +59,11 @@
   <div class="hidden w-1/3 lg:block">
     <SearchBar />
   </div>
-  <!-- THIS IS THE CART ICON TODO: EDIT THIS TO PROFILE
     <div class="ml-auto flex items-center">
-    <button on:click={openCart} class="relative my-2 mx-4">
+      <LightSwitch class="mr-4" />
+    <!--
+      THIS IS THE CART ICON TODO: EDIT THIS TO PROFILE
+       <button on:click={openCart} class="relative my-2 mx-4">
       <Icons strokeColor="#fff" type="cart" />
       <div
         data-test="cart-quantity"
@@ -67,7 +71,7 @@
       >
         2
       </div>
-    </button>
+    </button> -->
     <button
       on:click={() => {
         showMenu = true;
@@ -77,7 +81,7 @@
     >
       <Icons type="menu" />
     </button>
-  </div> -->
+  </div>
   {#if showMenu}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -97,14 +101,14 @@
           >
             <Icons strokeColor="#fff" type="close" />
           </button>
-          <button on:click={openCart} class="relative mr-4">
+          <!-- <button on:click={openCart} class="relative mr-4">
             <Icons strokeColor="#fff" type="cart" />
             <div
               class="absolute bottom-0 left-0 -ml-3 -mb-3 flex h-5 w-5 items-center justify-center rounded-full border border-black bg-white text-xs text-black"
             >
               2
             </div>
-          </button>
+          </button> -->
         </div>
         <div class="mt-6 flex w-full flex-col">
           {#each tabs as tab, i (tab.name)}
@@ -129,3 +133,27 @@
     </div>
   {/if}
 </nav>
+
+<style lang="postcss">
+  /* .active {
+    opacity: 1;
+    background-color: aliceblue;
+    class:active={isHovered} on:mouseover={() => isHovered = true} on:mouseout={() => isHovered = false} 
+  } */
+  
+    .active {
+      opacity: 1;
+      border: 1px solid whitesmoke;
+      border-radius: 2px;
+        /* animation: spin-animation 0.9s infinite; */
+    }
+
+    @keyframes spin-animation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(359deg);
+  }
+}
+</style>
