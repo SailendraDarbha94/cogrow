@@ -8,7 +8,9 @@
 	import { LightSwitch } from '@skeletonlabs/skeleton';
 	import { browser } from '$app/environment';
 	import supabase from '$utils/supabase';
-	import { user } from '$lib/store';
+	import user from '$lib/store';
+	import { goto } from '$app/navigation';
+
 
   const dispatch = createEventDispatcher();
   let userProfile:any
@@ -23,15 +25,17 @@
   let showMenu = false;
 
   async function logout() {
-    
     const { error } = await supabase.auth.signOut()
+    console.log("waaaaaahhhhhhh ab phuk le")
     if(!error){
       localStorage.removeItem("token")
+      goto('/auth/login')
     }
   }
   let   tabs = [
     { name: 'Home', path: '/home' },
     { name: 'Settings', path: '/settings' },
+    // { name: 'Logout', path: '/auth/logout' },
     //{ name: 'Apparel', path: '/search/clothes' }
   ];
   let   links = [
@@ -87,7 +91,7 @@
           >
         </div>
       {/each}
-      <button class="hover:opacity-100 opacity-75" on:click={logout}>Logout</button>
+        <button on:click={logout}>Logout</button>
       {:else}
       {#each links as link, i (link.name)}
       <div>
@@ -103,7 +107,11 @@
     </div>
   </div>
   <div class="hidden w-1/3 lg:block">
-    <SearchBar />
+    {#if userProfile}
+      <SearchBar />
+    {:else}
+        <a class="btn variant-filled" href="/about" rel="noreferrer"> More About Us </a>
+    {/if}
   </div>
     <div class="ml-auto flex items-center">
       <LightSwitch class="mr-4" />

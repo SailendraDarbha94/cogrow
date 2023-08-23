@@ -2,9 +2,10 @@
 	import { goto } from '$app/navigation';
 	import Alert from '$components/Alert.svelte';
 	import Loader from '$components/Loader.svelte';
+	import { checkAuthAndSetToken } from '$utils/auth';
 	import supabase from '$utils/supabase';
 	import Icon from '@iconify/svelte';
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
 
 	const dispatch = createEventDispatcher();
 
@@ -12,12 +13,18 @@
 	let password: string;
 	let message: string = '';
 	let isLoading: boolean = false;
-
+    let session:any;
+    onMount(async () => {
+        session = await checkAuthAndSetToken()
+    })
     const signUpWithGoogle = async (e:Event) => {
         console.log(e.target)
 
         const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google'
+        provider: 'google',
+		options: {
+			redirectTo: "http://localhost:5173/app"
+		}
         })
 
         console.log(data, error)

@@ -4,13 +4,12 @@
 	import { browser } from "$app/environment";
 	import { onMount } from "svelte";
 	import supabase from "$utils/supabase";
+	import { checkAuthAndSetToken } from "$utils/auth";
 
-
-	let pageData:any;
-
-	if (browser){
-		pageData = localStorage.getItem("userData")
-	}
+    let session:any;
+    onMount(async () => {
+        session = await checkAuthAndSetToken()
+    })
 
 </script>
 <!-- YOU CAN DELETE EVERYTHING IN THIS PAGE -->
