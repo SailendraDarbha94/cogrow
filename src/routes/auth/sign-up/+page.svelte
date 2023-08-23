@@ -131,14 +131,14 @@ import supabase from '$utils/supabase';
 				{#if isLoading}
 					<span class="pr-4">Loading</span> <Loader />
 				{:else}
-					Get my Bag!
+					Submit
 				{/if}
 			</button>
 
 
 		</form>
         <div class="p-2 flex justify-around flex-wrap">
-            <span class="block mx-auto text-black">Or sign up with</span>
+            <p class="w-full text-center text-black">Or Login with</p>
             <!-- svelte-ignore a11y-no-static-element-interactions -->
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div class="w-1/2 p-1 hover:cursor-pointer" on:click={signUpWithGoogle}>

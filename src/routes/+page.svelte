@@ -1,3 +1,17 @@
+<script lang="ts">
+
+	import { page } from "$app/stores";
+	import { browser } from "$app/environment";
+	import { onMount } from "svelte";
+	import supabase from "$utils/supabase";
+	import { checkAuthAndSetToken } from "$utils/auth";
+
+    let session:any;
+    onMount(async () => {
+        session = await checkAuthAndSetToken()
+    })
+
+</script>
 <!-- YOU CAN DELETE EVERYTHING IN THIS PAGE -->
 
 <div class="container h-full mx-auto flex justify-center items-center">
@@ -11,5 +25,8 @@
 				<code class="code">/src/routes/+page.svelte</code> - this page, you can replace the contents
 			</li>
 		</ul>
+		<a href="/auth/sign-up">signup</a>
+		<a href="/auth/login">login</a>
+		<a href="/profile">prof</a>
 	</div>
 </div>
