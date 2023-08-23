@@ -8,10 +8,17 @@
 	import { LightSwitch } from '@skeletonlabs/skeleton';
 	import { browser } from '$app/environment';
 	import supabase from '$utils/supabase';
+	import { user } from '$lib/store';
 
   const dispatch = createEventDispatcher();
+  let userProfile:any
+
+  user.subscribe((user) => {
+    userProfile = user;
+  })
 
   $: currentRoute = $page.url.pathname;
+  $: userProfile
 
   let showMenu = false;
 
@@ -36,16 +43,16 @@
     showMenu = false;
     dispatch('openCart', true);
   }
-  let authorised:boolean = false;
-  $: authorised
-  onMount(() => {
-    if(browser){
-    let token = localStorage.getItem("token")
-    if(token){
-      authorised = true;
-    }
-  }
-  })
+  // let authorised:boolean = false;
+  // $: authorised
+  // onMount(() => {
+  //   if(browser){
+  //   let token = localStorage.getItem("token")
+  //   if(token){
+  //     authorised = true;
+  //   }
+  // }
+  // })
 
 </script>
 
@@ -68,7 +75,7 @@
       </a>
     </div>
     <div class="flex">
-      {#if authorised}
+      {#if userProfile}
       {#each tabs as tab, i (tab.name)}
         <div class:active={currentRoute === tab.path}>
           <a

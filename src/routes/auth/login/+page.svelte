@@ -3,6 +3,7 @@
 	import Alert from '$components/Alert.svelte';
 	import Loader from '$components/Loader.svelte';
 	import supabase from '$utils/supabase';
+	import Icon from '@iconify/svelte';
 	import { createEventDispatcher } from 'svelte';
 
 	const dispatch = createEventDispatcher();
@@ -11,6 +12,19 @@
 	let password: string;
 	let message: string = '';
 	let isLoading: boolean = false;
+
+    const signUpWithGoogle = async (e:Event) => {
+        console.log(e.target)
+
+        const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google'
+        })
+
+        console.log(data, error)
+    }
+    const signUpWithTwitter = async (e:Event) => {
+        console.log(e)
+    }
 
 	async function handleSubmit() {
 		isLoading = true;
@@ -80,6 +94,19 @@
         {/if}
     </button>
 	</form>
+    <div class="p-2 flex justify-around flex-wrap">
+        <p class="w-full text-center text-black">Or Login with</p>
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <div class="w-1/2 p-1 hover:cursor-pointer" on:click={signUpWithGoogle}>
+            <Icon icon="flat-color-icons:google" class="h-10 w-10 ml-auto mr-1 rounded-md" />
+        </div>
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <div class="w-1/2 p-1 hover:cursor-pointer" on:click={signUpWithTwitter}>
+            <Icon icon="icon-park:big-x" class="h-10 w-10 ml-1 rounded-md mr-auto" />
+        </div>
+    </div>
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<p class="m-2 p-2 dark:text-black">
 		Don't have an account?
