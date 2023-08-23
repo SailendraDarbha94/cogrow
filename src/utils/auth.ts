@@ -12,6 +12,7 @@ export const checkAuthAndSetToken = async () => {
         user.set(null)
     }
     if (data) {
+        console.log(data.session?.access_token)
         localStorage.setItem("token", data.session?.access_token as string)
         user.set(data.session?.user)
     }
