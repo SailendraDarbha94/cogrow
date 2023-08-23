@@ -105,7 +105,7 @@
       {/if}
     </div>
   </div>
-  <div class="hidden w-1/3 lg:block">
+  <div class="w-1/3">
     {#if userProfile}
       <SearchBar />
     {:else}
