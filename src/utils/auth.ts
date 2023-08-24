@@ -7,11 +7,12 @@ export const checkAuthAndSetToken = async () => {
     // if (error) {
     //     return errorToast("An Error has occurred while saving auth Token")
     // }
-    if(!data) {
-        localStorage.removeItem("token")
-        user.set(null)
-    }
+    // if(!data) {
+    //     localStorage.removeItem("token")
+    //     user.set(null)
+    // }
     if (data) {
+        console.log(data.session?.access_token)
         localStorage.setItem("token", data.session?.access_token as string)
         user.set(data.session?.user)
     }

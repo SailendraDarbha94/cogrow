@@ -26,15 +26,14 @@
 
   async function logout() {
     const { error } = await supabase.auth.signOut()
-    console.log("waaaaaahhhhhhh ab phuk le")
     if(!error){
       localStorage.removeItem("token")
       goto('/auth/login')
     }
   }
   let   tabs = [
-    { name: 'Home', path: '/home' },
-    { name: 'Settings', path: '/settings' },
+    { name: 'SmartBag', path: '/app/chat' },
+    { name: 'Settings', path: '/settings/gen' },
     // { name: 'Logout', path: '/auth/logout' },
     //{ name: 'Apparel', path: '/search/clothes' }
   ];
@@ -81,22 +80,22 @@
     <div class="flex">
       {#if userProfile}
       {#each tabs as tab, i (tab.name)}
-        <div class:active={currentRoute === tab.path}>
+        <div>
           <a
             data-sveltekit-prefetch
             href={tab.path}
-            class={`hover:opacity-100 px-2 py-1 text-white rounded-lg ${
-              currentRoute === tab.path ? 'opacity-100' : 'opacity-75'
-            }`}>{tab.name}</a
+            class:active={currentRoute === tab.path}
+            class="hover:opacity-100 px-2 py-1">{tab.name}</a
           >
         </div>
       {/each}
-        <button on:click={logout}>Logout</button>
+        <button class="mx-2" on:click={logout}>Logout</button>
       {:else}
       {#each links as link, i (link.name)}
       <div>
         <a
           href={link.path}
+          class:active={currentRoute === link.path}
           class={`hover:opacity-100 px-2 py-1 text-white rounded-lg ${
             currentRoute === link.path ? 'opacity-100' : 'opacity-75'
           }`}>{link.name}</a
@@ -106,7 +105,7 @@
       {/if}
     </div>
   </div>
-  <div class="hidden w-1/3 lg:block">
+  <div class="w-1/3">
     {#if userProfile}
       <SearchBar />
     {:else}
