@@ -30,6 +30,12 @@
             path: "/app/prep",
             name: "Prep",
             icon: "pajamas:question"
+        },
+        {
+            id: 4,
+            path: "/settings/profile",
+            name: "Profile",
+            icon: "iconamoon:profile"
         }
     ]
 </script>
