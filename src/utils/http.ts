@@ -1,5 +1,19 @@
-const url = 'http://localhost:8000/session/start/';
+const url = "http://localhost:8000/buckets/create_bucket";
 
+
+async function createUserFileBucket() {
+    console.log('Creating user file bucket...');
+    const token:string = await localStorage.getItem("token") as string
+    console.log(`Bearer ${token}`)
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            accept: 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    }).then(data => console.log(data)).catch(err => console.log(err))
+}
 
 async function createSession() {
     console.log(JSON.stringify({
@@ -27,4 +41,4 @@ async function createSession() {
 		});
 }
 
-export default createSession;
+export default createUserFileBucket;

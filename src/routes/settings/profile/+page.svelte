@@ -2,20 +2,14 @@
 	import { onMount } from "svelte";
 
     import goku from "$lib/assets/goku.png"
+	import createUserFileBucket from "$utils/http";
 
     onMount(() => {
         const item = localStorage.getItem("token")
         connectWebSocket()
-        console.log(item)
+        //console.log(item)
     })
-//     let selectedImages: File[] = [];
-//     function handleImageChange(event: Event) {
-//     const input = event.target as HTMLInputElement;
-//     if (input.files) {
-//       // Save the selected images
-//       selectedImages = Array.from(input.files);
-//     }
-//   }
+
     let files:any;
     async function handleImageChange(event:Event){
         const input = event.target as HTMLInputElement;
@@ -57,6 +51,11 @@
 			console.error('WebSocket is not open. Unable to send the message.');
 		}
 	}
+
+    function createBucket(){
+        createUserFileBucket()
+        console.log('Creating bucket')
+    }
 </script>
 
 <div class="flex flex-col w-full h-full justify-between">
@@ -68,6 +67,7 @@
         on:change={handleImageChange}
         />
 
+        <button on:click={createBucket} class="variant-filled-secondary m-2 p-2 rounded-md">Stubborn User bucket</button>
 </div>
 <style>
     /* your styles go here */
