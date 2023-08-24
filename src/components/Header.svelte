@@ -32,7 +32,7 @@
     }
   }
   let   tabs = [
-    { name: 'Home', path: '/home' },
+    { name: 'SmartBag', path: '/app/chat' },
     { name: 'Settings', path: '/settings/gen' },
     // { name: 'Logout', path: '/auth/logout' },
     //{ name: 'Apparel', path: '/search/clothes' }
@@ -85,7 +85,7 @@
             data-sveltekit-prefetch
             href={tab.path}
             class:active={currentRoute === tab.path}
-            class="hover:opacity-100 px-2 py-1 text-white">{tab.name}</a
+            class="hover:opacity-100 px-2 py-1">{tab.name}</a
           >
         </div>
       {/each}
