@@ -2,10 +2,10 @@
 	import { checkAuthAndSetToken } from '$utils/auth';
 	import { onMount } from 'svelte';
 
-	let session: any;
-	onMount(async () => {
-		session = await checkAuthAndSetToken();
-	});
+	// let session: any;
+	// onMount(async () => {
+	// 	session = await checkAuthAndSetToken();
+	// });
 
 	import { FileDropzone } from '@skeletonlabs/skeleton';
 	//import type { ToastSettings } from '@skeletonlabs/skeleton';
@@ -14,6 +14,7 @@
 	//import { INTROTEXT, folders } from '$lib/stores/constantStore';
 	import Icon from '@iconify/svelte';
 	import ChatMessage from '$components/ChatMessage.svelte';
+	import createSession from '$utils/http';
 	//import FolderListView from '$lib/components/FolderListView.svelte';
 
 	let query: string = '';
@@ -91,11 +92,78 @@
         query = '';
         chatMessages = chatMessages
 	}
+
+    async function sessionStart() {
+        console.log("Session request")
+        createSession()
+    }
+
+    let messageText = "";
+    let messages:string[] = [];
+    let token = "";  // You can either hard-code this or obtain it dynamically
+    let ws:WebSocket;
+
+    $: messages
+    // let session: any;
+	// onMount(async () => {
+	// 	session = await checkAuthAndSetToken();
+	// });
+
+    function connectWebSocket() {
+        //console.log(token)
+        ws = new WebSocket("ws://localhost:8000/chat/message");
+        
+        ws.onopen = () => {
+            console.log("WebSocket is connected");
+        };
+
+        ws.onmessage = (event) => {
+            console.log(event)
+            console.log(event.data)
+            answer = event.data
+            //console.log(event.data)
+            messages.push(JSON.stringify(event.data));
+            messages = messages
+        };
+
+        ws.onerror = (error) => {
+            console.error("WebSocket Error: ", error);
+        };
+
+        ws.onclose = () => {
+            console.log("WebSocket connection closed");
+        };
+    }
+
+    onMount(async () => {
+        await connectWebSocket()
+    })
+    function sendMessage() {
+        // && ws.readyState === WebSocket.OPEN
+        if (ws) {
+            ws.send(messageText);
+            messageText = "";
+        } else {
+            console.error("WebSocket is not open. Unable to send the message.");
+        }
+    }
 </script>
 
 <div class="w-full h-full flex justify-center p-2">
 	<!-- <button on:click={() => toastStore.trigger(t)}>Show Notif</button> -->
 	<div class="w-1/2 py-4">
+        <!-- <h1>WebSocket Chat</h1>
+        <input bind:value={token} placeholder="Enter Token" class="text-black" />
+        <button on:click={connectWebSocket}>Connect</button>
+        <div>
+            <input bind:value={messageText} placeholder="Enter Message" class="text-black" />
+            <button on:click={sendMessage}>Send</button>
+        </div>
+        <ul>
+            {#each messages as message (message)}
+                <li>{message}</li>
+            {/each}
+        </ul> -->
 		<FileDropzone name="files" bind:files on:change={onChangeHandler}>
 			<svelte:fragment slot="lead">
 				<Icon icon="bx:file" width="60px" class="mx-auto" />
@@ -107,6 +175,9 @@
 				<span> md, png, pdf files allowed </span>
 			</svelte:fragment>
 		</FileDropzone>
+        <div class="flex justify-center">
+            <button class="variant-outline-warning my-4 p-2 rounded-md hover:bg-warning-400 hover:text-black" on:click={sessionStart}>Create Chat Session</button>
+        </div>
 	</div>
 	<div class="w-1/2 flex flex-col pt-4 px-8 items-center gap-2">
 		{#if fileUploaded}
@@ -121,7 +192,7 @@
 						<ChatMessage type={message.type} message={message.message} />
 					{/each}
 					{#if answer}
-						<ChatMessage type="chatbot" message={answer} />
+						<ChatMessage type="user" message={answer} />
 					{/if}
 					{#if loading}
 						<ChatMessage type="chatbot" message="Loading.." />
@@ -129,8 +200,8 @@
 				</div>
 				<div class="" bind:this={scrollToDiv} />
 			</div>
-			<form class="flex w-full rounded-md gap-4 bg-gray-900 p-4" on:submit|preventDefault={chat}>
-				<input type="text" class="input input-bordered w-full" bind:value={query} />
+			<form class="flex w-full rounded-md gap-4 bg-gray-900 p-4" on:submit|preventDefault={sendMessage}>
+				<input type="text" class="input input-bordered w-full" bind:value={messageText} />
 				<button type="submit" class="btn btn-accent text-white"> Send </button>
 			</form>
 		{:else}

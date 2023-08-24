@@ -11,11 +11,17 @@
 	import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
 	import { storePopup } from '@skeletonlabs/skeleton';
 	import Header from '$components/Header.svelte';
-	import { onMount } from 'svelte';
+	import { afterUpdate, onMount } from 'svelte';
 	import supabase from '$utils/supabase';
 	import { redirect } from '@sveltejs/kit';
+	import { checkAuthAndSetToken } from '$utils/auth';
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 	initializeStores()
+	let session: any;
+	
+	afterUpdate(async () => {
+		session = await checkAuthAndSetToken();
+	});
 </script>
 
 <AppShell>
