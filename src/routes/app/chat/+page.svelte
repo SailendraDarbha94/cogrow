@@ -1,95 +1,20 @@
-<!-- <script lang="ts">
-	import { checkAuthAndSetToken } from "$utils/auth";
-	import { onMount } from "svelte";
-
-    let messageText = "";
-    let messages:string[] = [];
-    let token = "";  // You can either hard-code this or obtain it dynamically
-    let ws:WebSocket;
-
-    $: messages
-    // let session: any;
-	// onMount(async () => {
-	// 	session = await checkAuthAndSetToken();
-	// });
-
-    function connectWebSocket() {
-        //console.log(token)
-        ws = new WebSocket("ws://localhost:8000/chat/message");
-        
-        ws.onopen = () => {
-            console.log("WebSocket is connected");
-        };
-
-        ws.onmessage = (event) => {
-            console.log(event.data)
-            //console.log(event.data)
-            messages.push(JSON.stringify(event.data));
-            messages = messages
-        };
-
-        ws.onerror = (error) => {
-            console.error("WebSocket Error: ", error);
-        };
-
-        ws.onclose = () => {
-            console.log("WebSocket connection closed");
-        };
-    }
-
-    onMount(async () => {
-        await connectWebSocket()
-    })
-    function sendMessage() {
-        // && ws.readyState === WebSocket.OPEN
-        if (ws) {
-            ws.send(messageText);
-            messageText = "";
-        } else {
-            console.error("WebSocket is not open. Unable to send the message.");
-        }
-    }
-</script>
-
-<div>
-    <h1>WebSocket Chat</h1>
-    <input bind:value={token} placeholder="Enter Token" class="text-black" />
-    <button on:click={connectWebSocket}>Connect</button>
-    <div>
-        <input bind:value={messageText} placeholder="Enter Message" class="text-black" />
-        <button on:click={sendMessage}>Send</button>
-    </div>
-    <ul>
-        {#each messages as message (message)}
-            <li>{message}</li>
-        {/each}
-    </ul>
-</div> -->
-
 <script lang="ts">
-	import { checkAuthAndSetToken } from '$utils/auth';
 	import { onMount } from 'svelte';
-
-	// let session: any;
-	// onMount(async () => {
-	// 	session = await checkAuthAndSetToken();
-	// });
-
 	import { FileDropzone } from '@skeletonlabs/skeleton';
-	//import type { ToastSettings } from '@skeletonlabs/skeleton';
-	//import type { ChatCompletionRequestMessage } from 'openai';
-	//import { notes } from '$lib/stores/basicStore';
-	//import { INTROTEXT, folders } from '$lib/stores/constantStore';
 	import Icon from '@iconify/svelte';
 	import ChatMessage from '$components/ChatMessage.svelte';
 	import createSession from '$utils/http';
-	//import FolderListView from '$lib/components/FolderListView.svelte';
-
+	onMount(async () => {
+		await connectWebSocket();
+	});
+	interface Message {
+		message: string;
+		type: string;
+	}
 	let query: string = '';
 	let answer: string = '';
 	let loading: boolean = false;
-	// let chatMessages: ChatCompletionRequestMessage[] = [];
-	let chatMessages: any[] = [];
+	let chatMessages: Message[] = [];
 	let scrollToDiv: HTMLDivElement;
 	function scrollToBottom() {
 		setTimeout(function () {
@@ -99,139 +24,109 @@
 
 	let fileUploaded: boolean = false;
 	let files: FileList;
+	let connection: WebSocket | null = null;
+	let endpoint: string;
+	async function uploadFilesArray(params: FileList) {
+		connection = new WebSocket(`ws://localhost:8000/ws/${endpoint}`);
+		connection.onopen = (event) => {
+			console.log('WebSocket Connection Opened: ' + event);
+		};
+		// Set the event handler for receiving messages
+		connection.onmessage = (event) => {
+			console.log();
+		};
 
+		// Set the event handler for errors
+		connection.onerror = (event) => {
+			console.error('WebSocket error observed:', event);
+			//handleError(event);
+		};
+
+		// Set the event handler for closing the connection
+		connection.onclose = (event) => {
+			if (event) {
+				console.log("WebSocket Connection Closed" + event);
+				connection = null;
+			} else {
+				connection = null;
+			}
+		};
+	}
 	function onChangeHandler(e: Event): void {
 		fileUploaded = !fileUploaded;
 		//console.log('file data:', e);
+		uploadFilesArray(files);
 		console.log('file : ', files);
 	}
 
-	// const handleSubmit = async () => {
-	// 	loading = true;
-	// 	chatMessages = [...chatMessages, { role: 'user', content: query }];
-
-	// 	const eventSource = new SSE('/api/chat', {
-	// 		headers: {
-	// 			'Content-Type': 'application/json'
-	// 		},
-	// 		payload: JSON.stringify({ messages: chatMessages })
-	// 	});
-
-	// 	query = '';
-
-	// 	eventSource.addEventListener('error', handleError);
-
-	// 	eventSource.addEventListener('message', (e:any) => {
-	// 		scrollToBottom();
-	// 		try {
-	// 			loading = false;
-	// 			if (e.data === '[DONE]') {
-	// 				chatMessages = [...chatMessages, { role: 'assistant', content: answer }];
-	// 				answer = '';
-	// 				return;
-	// 			}
-
-	// 			const completionResponse = JSON.parse(e.data);
-	// 			const [{ delta }] = completionResponse.choices;
-
-	// 			if (delta.content) {
-	// 				answer = (answer ?? '') + delta.content;
-	// 			}
-	// 		} catch (err) {
-	// 			handleError(err);
-	// 		}
-	// 	});
-	// 	eventSource.stream();
-	// 	scrollToBottom();
-	// };
-
-	function handleError<T>(err: T) {
-		loading = false;
-		query = '';
-		answer = '';
-		console.error(err);
+	async function sessionStart() {
+		console.log('Session request');
+		createSession();
 	}
 
-	async function chat() {
-		chatMessages.push({
-            message: query,
-            type: "user",
-        });
-        query = '';
-        chatMessages = chatMessages
+	let messageText = '';
+	let messages: Message[] = [];
+	let token = ''; // You can either hard-code this or obtain it dynamically
+	let ws: WebSocket;
+
+	$: messages;
+
+	function connectWebSocket() {
+		//console.log(token)
+		ws = new WebSocket('ws://localhost:8000/chat/message');
+
+		ws.onopen = () => {
+			console.log('WebSocket is connected');
+		};
+
+		ws.onmessage = (event) => {
+			//console.log(event);
+			console.log(event.data);
+			let a: string = event.data.split('=')[1].toString();
+			let b: string = a.split('(')[1].toString();
+			let c: string = b.split(')')[0].toString();
+			answer = c;
+		};
+
+		ws.onerror = (error) => {
+			console.error('WebSocket Error: ', error);
+		};
+
+		ws.onclose = () => {
+			console.log('WebSocket connection closed');
+		};
 	}
 
-    async function sessionStart() {
-        console.log("Session request")
-        createSession()
-    }
+	function sendMessage() {
+		// && ws.readyState === WebSocket.OPEN
+		if (ws) {
+			ws.send(messageText);
+			messages.push({
+				message: messageText,
+				type: 'user'
+			});
+			messages = messages;
+			messageText = '';
+		} else {
+			console.error('WebSocket is not open. Unable to send the message.');
+		}
+	}
 
-    let messageText = "";
-    let messages:string[] = [];
-    let token = "";  // You can either hard-code this or obtain it dynamically
-    let ws:WebSocket;
+	let selectedFiles: File[] = [];
+	function handleFileInput(event: Event) {
+		const input = event.target as HTMLInputElement;
 
-    $: messages
-    // let session: any;
-	// onMount(async () => {
-	// 	session = await checkAuthAndSetToken();
-	// });
-
-    function connectWebSocket() {
-        //console.log(token)
-        ws = new WebSocket("ws://localhost:8000/chat/message");
-        
-        ws.onopen = () => {
-            console.log("WebSocket is connected");
-        };
-
-        ws.onmessage = (event) => {
-            console.log(event)
-            console.log(event.data)
-            answer = event.data
-            //console.log(event.data)
-            messages.push(JSON.stringify(event.data));
-            messages = messages
-        };
-
-        ws.onerror = (error) => {
-            console.error("WebSocket Error: ", error);
-        };
-
-        ws.onclose = () => {
-            console.log("WebSocket connection closed");
-        };
-    }
-
-    onMount(async () => {
-        await connectWebSocket()
-    })
-    function sendMessage() {
-        // && ws.readyState === WebSocket.OPEN
-        if (ws) {
-            ws.send(messageText);
-            messageText = "";
-        } else {
-            console.error("WebSocket is not open. Unable to send the message.");
-        }
-    }
+		if (input.files) {
+			// Save the selected images
+			selectedFiles = Array.from(input.files);
+		}
+		console.log(selectedFiles);
+	}
 </script>
 
 <div class="h-full flex justify-center p-2">
 	<!-- <button on:click={() => toastStore.trigger(t)}>Show Notif</button> -->
 	<div class="w-1/2 py-4">
-        <!-- <h1>WebSocket Chat</h1>
-        <input bind:value={token} placeholder="Enter Token" class="text-black" />
-        <button on:click={connectWebSocket}>Connect</button>
-        <div>
-            <input bind:value={messageText} placeholder="Enter Message" class="text-black" />
-            <button on:click={sendMessage}>Send</button>
-        </div>
-        <ul>
-            {#each messages as message (message)}
-                <li>{message}</li>
-            {/each}
-        </ul> -->
 		<FileDropzone name="files" bind:files on:change={onChangeHandler}>
 			<svelte:fragment slot="lead">
 				<Icon icon="bx:file" width="60px" class="mx-auto" />
@@ -243,9 +138,17 @@
 				<span> md, png, pdf files allowed </span>
 			</svelte:fragment>
 		</FileDropzone>
-        <div class="flex justify-center">
-            <button class="variant-outline-warning my-4 p-2 rounded-md hover:bg-warning-400 hover:text-black" on:click={sessionStart}>Create Chat Session</button>
-        </div>
+		<div class="flex justify-center">
+			<div class="w-full bg-purple-300">
+				<p>Drag and drop files here, or click to select files</p>
+				<input type="file" id="image" on:change={handleFileInput} style="display: none" multiple />
+				<label for="image">Select Images</label>
+			</div>
+			<button
+				class="variant-outline-warning my-4 p-2 rounded-md hover:bg-warning-400 hover:text-black"
+				on:click={sessionStart}>Upload file via WebSocket</button
+			>
+		</div>
 	</div>
 	<div class="w-1/2 flex flex-col pt-4 px-8 items-center gap-2">
 		{#if fileUploaded}
@@ -259,8 +162,11 @@
 					{#each chatMessages as message}
 						<ChatMessage type={message.type} message={message.message} />
 					{/each}
+					{#each messages as message}
+						<ChatMessage type={message.type} message={message.message} />
+					{/each}
 					{#if answer}
-						<ChatMessage type="user" message={answer} />
+						<ChatMessage type="chatbot" message={answer} />
 					{/if}
 					{#if loading}
 						<ChatMessage type="chatbot" message="Loading.." />
@@ -268,7 +174,10 @@
 				</div>
 				<div class="" bind:this={scrollToDiv} />
 			</div>
-			<form class="flex w-full rounded-md gap-4 bg-gray-900 p-4" on:submit|preventDefault={sendMessage}>
+			<form
+				class="flex w-full rounded-md gap-4 bg-gray-900 p-4"
+				on:submit|preventDefault={sendMessage}
+			>
 				<input type="text" class="input input-bordered w-full" bind:value={messageText} />
 				<button type="submit" class="btn btn-accent text-white"> Send </button>
 			</form>
