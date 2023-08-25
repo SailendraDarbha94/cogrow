@@ -1,7 +1,13 @@
-const url = "http://localhost:8000/buckets/create_bucket";
+//const url = "http://localhost:8000/buckets/create_bucket";
+import { env } from "$env/dynamic/public"; 
+import { toastSignal } from "$lib/store";
+
+
+let url:string = env.PUBLIC_BACKEND_URL
 
 
 async function createUserFileBucket() {
+    url = url + "/buckets/create_bucket"
     console.log('Creating user file bucket...');
     const token:string = await localStorage.getItem("token") as string
     console.log(`Bearer ${token}`)
@@ -12,7 +18,10 @@ async function createUserFileBucket() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
         }
-    }).then(data => console.log(data)).catch(err => console.log(err))
+    }).then(data => console.log(data)).catch((err:Response) => {
+        toastSignal.update(value => value = "An Error occurred")
+        console.log(err)
+    })
 }
 
 async function createSession() {
@@ -41,4 +50,26 @@ async function createSession() {
 		});
 }
 
-export default createUserFileBucket;
+async function createHelloWorld() {
+    url = env.PUBLIC_BACKEND_URL + "/auth/current_user"
+    console.log('Establishing backend handshake...');
+    const token:string = await localStorage.getItem("token") as string
+    //console.log(`Bearer ${token}`)
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            accept: 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    }).then(async data => {
+        let newdata = await data.json()
+        console.log(newdata)
+    }).catch((err:Response) => {
+        toastSignal.update(value => value = "An Error occurred")
+        console.log(err)
+    })
+}
+
+
+export default createHelloWorld;

@@ -7,6 +7,8 @@
 	import Icon from '@iconify/svelte';
 	import { createEventDispatcher, onMount } from 'svelte';
 
+	import { toastSignal } from '$lib/store';
+
 	const dispatch = createEventDispatcher();
 
 	let email: string;
@@ -35,8 +37,6 @@
 
 	async function handleSubmit() {
 		isLoading = true;
-		dispatch('submit');
-		console.log('form submitted');
 		message = '';
 		let { data, error } = await supabase.auth.signInWithPassword({
 			email,
@@ -44,7 +44,11 @@
 		});
 
 		if (error) {
-			message = error.message;
+			//message = error.message;
+			email = '';
+			password = '';
+			isLoading = false;
+			toastSignal.update(value => value = error?.message as string);
 			console.error(error.message);
 			return;
 		} else {

@@ -1,9 +1,13 @@
 <script lang="ts">
+	import { page } from "$app/stores";
+
     // your script goes here
 
 	import Sidebar from "$components/Sidebar.svelte";
 	import { fade, fly } from "svelte/transition";
-    export let data;
+  export let data;
+
+  console.log($page.data.url)
 </script>
 
 <div class="grid grid-cols-12 gap-2 p-4 ">

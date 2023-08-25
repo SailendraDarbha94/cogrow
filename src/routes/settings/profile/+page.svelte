@@ -3,6 +3,8 @@
 
     import goku from "$lib/assets/goku.png"
 	import createUserFileBucket from "$utils/http";
+	import { toastSignal } from "$lib/store";
+	import createHelloWorld from "$utils/http";
 
     onMount(() => {
         const item = localStorage.getItem("token")
@@ -26,7 +28,7 @@
 		ws = new WebSocket('ws://localhost:8000/chat/message');
 
 		ws.onopen = () => {
-			console.log('WebSocket is connected for file upload');
+            toastSignal.update(value => value = "WebSocket connection openend")
 		};
 
 		ws.onmessage = (event) => {
@@ -39,7 +41,7 @@
 		};
 
 		ws.onclose = () => {
-			console.log('WebSocket connection closed');
+            toastSignal.update(value => value = "WebSocket connection closed")
 		};
 	}
 
@@ -56,6 +58,11 @@
         createUserFileBucket()
         console.log('Creating bucket')
     }
+
+    function helloWorld() {
+        createHelloWorld()
+        console.log('Hello world')
+    }
 </script>
 
 <div class="flex flex-col w-full h-full justify-between">
@@ -68,6 +75,7 @@
         />
 
         <button on:click={createBucket} class="variant-filled-secondary m-2 p-2 rounded-md">Stubborn User bucket</button>
+        <button on:click={helloWorld} class="variant-filled-secondary m-2 p-2 rounded-md">Hello World</button>
 </div>
 <style>
     /* your styles go here */

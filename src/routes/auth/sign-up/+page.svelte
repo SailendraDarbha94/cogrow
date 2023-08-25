@@ -4,6 +4,7 @@
     import Icon from '@iconify/svelte';
 import supabase from '$utils/supabase';
 	import { createEventDispatcher } from 'svelte';
+	import { toastSignal } from '$lib/store';
 	let fullName: string;
 	let email: string;
 	let password: string;
@@ -35,8 +36,8 @@ import supabase from '$utils/supabase';
 		message = '';
 		if (password !== confirmPassword) {
 			isLoading = false;
-			message = 'Passwords do not match';
-			return;
+			//message = 'Passwords do not match';
+			toastSignal.update(value => value = "Passwords do not match");
 		}
 
 		let userResults = await supabase.auth.signUp({
