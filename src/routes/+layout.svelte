@@ -15,15 +15,20 @@
 	import { afterUpdate, onMount } from 'svelte';
 	import { checkAuthAndSetToken } from '$utils/auth';
 	import { toastSignal } from '$lib/store';
+	import AuthenticatedHeader from '$components/AuthenticatedHeader.svelte';
+	import { page } from '$app/stores';
+	import { fade, fly } from 'svelte/transition';
+	import Sidebar from '$components/Sidebar.svelte';
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 	initializeStores();
 	let session: any;
-
+	export let data;
 	afterUpdate(async () => {
 		session = await checkAuthAndSetToken();
 	});
 	const toastStore = getToastStore();
 
+	console.log(data);
 	toastSignal.subscribe((value) => {
 		if (value) {
 			toastStore.trigger({
@@ -36,11 +41,28 @@
 
 <AppShell>
 	<svelte:fragment slot="header">
-		<Header />
+		{#if data.user}
+			<AuthenticatedHeader />
+		{:else}
+			<Header />
+		{/if}
 	</svelte:fragment>
-	<svelte:fragment slot="default">
-		<slot />
-	</svelte:fragment>
+	<div class="flex">
+		{#if data.user}
+			<div class="hidden md:block md:w-1/3">
+				<Sidebar />
+			</div>
+		{/if}
+		{#key $page.url.pathname}
+			<div
+				in:fly={{ delay: 100, duration: 250, y: -100 }}
+				out:fade={{ duration: 100 }}
+				class="w-full"
+			>
+				<slot />
+			</div>
+		{/key}
+	</div>
 	<svelte:fragment slot="footer">
 		<Toast />
 	</svelte:fragment>
