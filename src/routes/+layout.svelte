@@ -28,6 +28,9 @@
 	});
 	const toastStore = getToastStore();
 
+	onMount(() => {
+		toastSignal.update(value => value = "Welcome To Smartbag")
+	})
 	console.log(data);
 	toastSignal.subscribe((value) => {
 		if (value) {
