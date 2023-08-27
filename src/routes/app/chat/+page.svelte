@@ -36,11 +36,11 @@
 	}
 
 	async function goingMad(formData:FormData) {
-		fetch(`${env.PUBLIC_BACKEND_URL}/vectors/upload_vector/`, {
+		fetch(`http://15.206.195.182/vectors/upload_vector`, {
         method: 'POST',
         headers: {
             accept: 'application/json',
-            'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryyEmKNDsBKjB7QEqu',
+            'Content-Type': 'multipart/form-data',
             'Authorization': `Bearer ${env.PUBLIC_AUTH_TOKEN}`
         },
 		body: formData
@@ -56,11 +56,13 @@
 		const formData = new FormData()
 		if (input.files) {
 			// Save the selected images
+			console.log(input.files)
 			selectedFile = input.files[0]
+			console.log("Selected File :" ,selectedFile)
 			formData.append('upload_file', selectedFile)
+			console.log(formData.toString())
 			await goingMad(formData)
 		}
-		console.log(selectedFile);
 	}
 </script>
 
@@ -78,6 +80,10 @@
 				<span> md, png, pdf files allowed </span>
 			</svelte:fragment>
 		</FileDropzone>
+		<!-- <form action="http://15.206.195.182/vectors/upload_vector/" on:submit|preventDefault={handleFileInput} method="POST" enctype="multipart/form-data">
+			<input type="file" name="file" />
+			<input type="submit" class="btn variant-form-material"/>
+		 </form> -->
 	</div>
 	<div class="w-1/2 flex flex-col pt-4 px-8 items-center gap-2">
 		{#if fileUploaded}
