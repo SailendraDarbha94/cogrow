@@ -36,12 +36,13 @@
 	}
 
 	async function goingMad(formData:FormData) {
-		fetch(`http://15.206.195.182/vectors/upload_vector`, {
+		let token = localStorage.getItem("token");
+		fetch(`${env.PUBLIC_BACKEND_URL}/vectors/upload_vector`, {
         method: 'POST',
         headers: {
             accept: 'application/json',
             'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${env.PUBLIC_AUTH_TOKEN}`
+            'Authorization': `Bearer ${token}`
         },
 		body: formData
     }).then(data => console.log(data)).catch((err:any) => {
