@@ -6,7 +6,7 @@ export const load: LayoutLoad = async ({ url }) => {
     const { data, error } = await supabase.auth.getSession()
     const user = await data.session?.user
     const token = await data.session?.access_token
-    localStorage.setItem('token', token as string)
+    //localStorage.setItem('token', token as string)
     if (error) {
         console.error(error)
     }
