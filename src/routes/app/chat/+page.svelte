@@ -4,130 +4,72 @@
 	import Icon from '@iconify/svelte';
 	import ChatMessage from '$components/ChatMessage.svelte';
 	import createSession from '$utils/http';
-	onMount(async () => {
-		await connectWebSocket();
-	});
+	import { browser } from '$app/environment';
+	import { env } from '$env/dynamic/public';
+	import { toastSignal } from '$lib/store';
+	// onMount(async () => {
+	// 	await connectWebSocket();
+	// });
+	let scrollToDiv: HTMLDivElement;
 	interface Message {
 		message: string;
 		type: string;
 	}
-	let query: string = '';
-	let answer: string = '';
-	let loading: boolean = false;
-	let chatMessages: Message[] = [];
-	let scrollToDiv: HTMLDivElement;
+
 	function scrollToBottom() {
 		setTimeout(function () {
 			scrollToDiv.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 		}, 100);
 	}
 
+	let files:FileList;
+	let query: string = '';
+	let answer: string = '';
+	let loading: boolean = false;
+	let chatMessages: Message[] = [];
 	let fileUploaded: boolean = false;
-	let files: FileList;
-	let connection: WebSocket | null = null;
-	let endpoint: string;
-	async function uploadFilesArray(params: FileList) {
-		connection = new WebSocket(`ws://localhost:8000/ws/${endpoint}`);
-		connection.onopen = (event) => {
-			console.log('WebSocket Connection Opened: ' + event);
-		};
-		// Set the event handler for receiving messages
-		connection.onmessage = (event) => {
-			console.log();
-		};
+	let messages:Message[] = [];
+	let messageText:string = '';
 
-		// Set the event handler for errors
-		connection.onerror = (event) => {
-			console.error('WebSocket error observed:', event);
-			//handleError(event);
-		};
-
-		// Set the event handler for closing the connection
-		connection.onclose = (event) => {
-			if (event) {
-				console.log("WebSocket Connection Closed" + event);
-				connection = null;
-			} else {
-				connection = null;
-			}
-		};
-	}
-	function onChangeHandler(e: Event): void {
-		fileUploaded = !fileUploaded;
-		//console.log('file data:', e);
-		uploadFilesArray(files);
-		console.log('file : ', files);
+	async function sendMessage(e:Event) {
+		console.log(messageText, e.target)
 	}
 
-	async function sessionStart() {
-		console.log('Session request');
-		createSession();
+	async function goingMad(formData:FormData) {
+		fetch(`http://15.206.195.182/vectors/upload_vector`, {
+        method: 'POST',
+        headers: {
+            accept: 'application/json',
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${env.PUBLIC_AUTH_TOKEN}`
+        },
+		body: formData
+    }).then(data => console.log(data)).catch((err:any) => {
+        toastSignal.update(value => value = "An Error occurred")
+        console.error(err)
+    })
 	}
 
-	let messageText = '';
-	let messages: Message[] = [];
-	let token = ''; // You can either hard-code this or obtain it dynamically
-	let ws: WebSocket;
-
-	$: messages;
-
-	function connectWebSocket() {
-		//console.log(token)
-		ws = new WebSocket('ws://localhost:8000/chat/message');
-
-		ws.onopen = () => {
-			console.log('WebSocket is connected');
-		};
-
-		ws.onmessage = (event) => {
-			//console.log(event);
-			console.log(event.data);
-			let a: string = event.data.split('=')[1].toString();
-			let b: string = a.split('(')[1].toString();
-			let c: string = b.split(')')[0].toString();
-			answer = c;
-		};
-
-		ws.onerror = (error) => {
-			console.error('WebSocket Error: ', error);
-		};
-
-		ws.onclose = () => {
-			console.log('WebSocket connection closed');
-		};
-	}
-
-	function sendMessage() {
-		// && ws.readyState === WebSocket.OPEN
-		if (ws) {
-			ws.send(messageText);
-			messages.push({
-				message: messageText,
-				type: 'user'
-			});
-			messages = messages;
-			messageText = '';
-		} else {
-			console.error('WebSocket is not open. Unable to send the message.');
-		}
-	}
-
-	let selectedFiles: File[] = [];
-	function handleFileInput(event: Event) {
+	let selectedFile: File
+	async function handleFileInput(event: Event) {
 		const input = event.target as HTMLInputElement;
-
+		const formData = new FormData()
 		if (input.files) {
 			// Save the selected images
-			selectedFiles = Array.from(input.files);
+			console.log(input.files)
+			selectedFile = input.files[0]
+			console.log("Selected File :" ,selectedFile)
+			formData.append('upload_file', selectedFile)
+			console.log(formData.toString())
+			await goingMad(formData)
 		}
-		console.log(selectedFiles);
 	}
 </script>
 
 <div class="h-full flex justify-center p-2">
 	<!-- <button on:click={() => toastStore.trigger(t)}>Show Notif</button> -->
 	<div class="w-1/2 py-4">
-		<FileDropzone name="files" bind:files on:change={onChangeHandler}>
+		<FileDropzone name="files" bind:files on:change={handleFileInput}>
 			<svelte:fragment slot="lead">
 				<Icon icon="bx:file" width="60px" class="mx-auto" />
 			</svelte:fragment>
@@ -138,17 +80,10 @@
 				<span> md, png, pdf files allowed </span>
 			</svelte:fragment>
 		</FileDropzone>
-		<div class="flex justify-center">
-			<div class="w-full bg-purple-300">
-				<p>Drag and drop files here, or click to select files</p>
-				<input type="file" id="image" on:change={handleFileInput} style="display: none" multiple />
-				<label for="image">Select Images</label>
-			</div>
-			<button
-				class="variant-outline-warning my-4 p-2 rounded-md hover:bg-warning-400 hover:text-black"
-				on:click={sessionStart}>Upload file via WebSocket</button
-			>
-		</div>
+		<!-- <form action="http://15.206.195.182/vectors/upload_vector/" on:submit|preventDefault={handleFileInput} method="POST" enctype="multipart/form-data">
+			<input type="file" name="file" />
+			<input type="submit" class="btn variant-form-material"/>
+		 </form> -->
 	</div>
 	<div class="w-1/2 flex flex-col pt-4 px-8 items-center gap-2">
 		{#if fileUploaded}
@@ -172,7 +107,7 @@
 						<ChatMessage type="chatbot" message="Loading.." />
 					{/if}
 				</div>
-				<div class="" bind:this={scrollToDiv} />
+				<!-- <div class="" bind:this={scrollToDiv} /> -->
 			</div>
 			<form
 				class="flex w-full rounded-md gap-4 bg-gray-900 p-4"

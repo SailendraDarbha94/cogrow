@@ -78,19 +78,6 @@
       </a>
     </div>
     <div class="flex">
-      {#if userProfile}
-      {#each tabs as tab, i (tab.name)}
-        <div>
-          <a
-            data-sveltekit-prefetch
-            href={tab.path}
-            class:active={currentRoute === tab.path}
-            class="hover:opacity-100 px-2 py-1">{tab.name}</a
-          >
-        </div>
-      {/each}
-        <button class="mx-2" on:click={logout}>Logout</button>
-      {:else}
       {#each links as link, i (link.name)}
       <div>
         <a
@@ -102,15 +89,10 @@
         >
       </div>
     {/each}
-      {/if}
     </div>
   </div>
   <div class="w-1/3">
-    {#if userProfile}
-      <SearchBar />
-    {:else}
         <a class="btn variant-filled" href="/about" rel="noreferrer"> More About Us </a>
-    {/if}
   </div>
     <div class="ml-auto flex items-center">
       <LightSwitch class="mr-4" />
@@ -165,20 +147,20 @@
         </div>
         <div class="mt-6 flex w-full flex-col">
 
-          {#each tabs as tab, i (tab.name)}
+          {#each links as link, i (link.name)}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
-              class:active={currentRoute === tab.path}
+              class:active={currentRoute === link.path}
               on:click={() => {
                 showMenu = false;
               }}
             >
               <a
                 data-sveltekit-prefetch
-                href={tab.path}
+                href={link.path}
                 class={`hover:opacity-100 px-2 py-1 text-white font-bold text-xl rounded-lg ${
-                  currentRoute === tab.path ? 'opacity-100' : 'opacity-75'
-                }`}>{tab.name}</a
+                  currentRoute === link.path ? 'opacity-100' : 'opacity-75'
+                }`}>{link.name}</a
               >
             </div>
           {/each}
