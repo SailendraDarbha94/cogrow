@@ -41,7 +41,7 @@
         method: 'POST',
         headers: {
             accept: 'application/json',
-            'Content-Type': 'multipart/form-data',
+            //'Content-Type': 'multipart/form-data',
             'Authorization': `Bearer ${env.PUBLIC_AUTH_TOKEN}`
         },
 		body: formData
