@@ -4,9 +4,12 @@
 	import Icon from '@iconify/svelte';
 	import ChatMessage from '$components/ChatMessage.svelte';
 	import createSession from '$utils/http';
-	onMount(async () => {
-		await connectWebSocket();
-	});
+	import { browser } from '$app/environment';
+	import { env } from '$env/dynamic/public';
+	import { toastSignal } from '$lib/store';
+	// onMount(async () => {
+	// 	await connectWebSocket();
+	// });
 	interface Message {
 		message: string;
 		type: string;
@@ -22,12 +25,12 @@
 		}, 100);
 	}
 
-	let fileUploaded: boolean = false;
+	let fileUploaded: boolean = true;
 	let files: FileList;
 	let connection: WebSocket | null = null;
 	let endpoint: string;
-	async function uploadFilesArray(params: FileList) {
-		connection = new WebSocket(`ws://localhost:8000/ws/${endpoint}`);
+	async function uploadFilesArray(e:Event) {
+		connection = new WebSocket(`ws://localhost:8000/chat/message`);
 		connection.onopen = (event) => {
 			console.log('WebSocket Connection Opened: ' + event);
 		};
@@ -55,8 +58,8 @@
 	function onChangeHandler(e: Event): void {
 		fileUploaded = !fileUploaded;
 		//console.log('file data:', e);
-		uploadFilesArray(files);
-		console.log('file : ', files);
+		//uploadFilesArray(files);
+		//console.log('file : ', files);
 	}
 
 	async function sessionStart() {
@@ -66,25 +69,40 @@
 
 	let messageText = '';
 	let messages: Message[] = [];
-	let token = ''; // You can either hard-code this or obtain it dynamically
+	let token = env.PUBLIC_AUTH_TOKEN // You can either hard-code this or obtain it dynamically
 	let ws: WebSocket;
 
 	$: messages;
 
+	onMount(() => {
+		if(browser){
+			token = localStorage.getItem('token') as string;
+		}
+		console.log("token:", token)
+	})
+
+	const headers:string = JSON.stringify({
+		accept: 'application/json',
+		'Content-Type': 'application/json',
+		'Authorization': `Bearer ${token}`
+	})
+
 	function connectWebSocket() {
 		//console.log(token)
-		ws = new WebSocket('ws://localhost:8000/chat/message');
+		
+		
+		ws = new WebSocket(`ws://${token}@15.206.195.182/chat/message`)
 
 		ws.onopen = () => {
-			console.log('WebSocket is connected');
+			console.log('WebSocket is connected')
 		};
 
 		ws.onmessage = (event) => {
-			//console.log(event);
+			console.log(event);
 			console.log(event.data);
-			let a: string = event.data.split('=')[1].toString();
-			let b: string = a.split('(')[1].toString();
-			let c: string = b.split(')')[0].toString();
+			let a: string = event.data.split('=')[1];
+			let b: string = a.split('(')[1];
+			let c: string = b.split(')')[0];
 			answer = c;
 		};
 
@@ -112,6 +130,22 @@
 		}
 	}
 
+	async function getHandshake(params:any) {
+		const url = `ws://15.206.195.182/chat`
+		const token = localStorage.getItem('token')
+		fetch(url, {
+        method: 'GET',
+        headers: {
+            accept: 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    }).then(data => console.log(data)).catch((err:Response) => {
+        toastSignal.update(value => value = "An Error occurred")
+        console.log(err)
+    })
+	}
+
 	let selectedFiles: File[] = [];
 	function handleFileInput(event: Event) {
 		const input = event.target as HTMLInputElement;
@@ -127,7 +161,7 @@
 <div class="h-full flex justify-center p-2">
 	<!-- <button on:click={() => toastStore.trigger(t)}>Show Notif</button> -->
 	<div class="w-1/2 py-4">
-		<FileDropzone name="files" bind:files on:change={onChangeHandler}>
+		<FileDropzone name="files" bind:files on:change={uploadFilesArray}>
 			<svelte:fragment slot="lead">
 				<Icon icon="bx:file" width="60px" class="mx-auto" />
 			</svelte:fragment>
@@ -146,7 +180,7 @@
 			</div>
 			<button
 				class="variant-outline-warning my-4 p-2 rounded-md hover:bg-warning-400 hover:text-black"
-				on:click={sessionStart}>Upload file via WebSocket</button
+				on:click={connectWebSocket}>Open Websocket connection</button
 			>
 		</div>
 	</div>
