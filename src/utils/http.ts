@@ -50,26 +50,26 @@ async function createSession() {
 		});
 }
 
-async function uploadFile() {
-    url = `${env.PUBLIC_BACKEND_URL}/files/upload_file/`
-    console.log('Establishing backend handshake...')
-    const token:string = await localStorage.getItem("token") as string
-    //console.log(`Bearer ${token}`)
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            accept: 'application/json',
-            //'Content-Type': 'application/json',
-            'Authorization': token
-        }
-    }).then(async data => {
-        let newdata = await data.json()
-        console.log("new data",newdata)
-    }).catch((err:Response) => {
-        toastSignal.update(value => value = "An Error occurred")
-        console.log(err)
-    })
-}
+// async function uploadFile(file:File) {
+//     url = `${env.PUBLIC_BACKEND_URL}/files/upload_file/`
+//     console.log('Establishing backend handshake...')
+//     const token:string = await localStorage.getItem("token") as string
+//     //console.log(`Bearer ${token}`)
+//     fetch(url, {
+//         method: 'POST',
+//         headers: {
+//             accept: 'application/json',
+//             //'Content-Type': 'application/json',
+//             'Authorization': token
+//         }
+//     }).then(async data => {
+//         let newdata = await data.json()
+//         console.log("new data",newdata)
+//     }).catch((err:Response) => {
+//         toastSignal.update(value => value = "An Error occurred")
+//         console.log(err)
+//     })
+// }
 
 
-export default uploadFile;
+export default createUserFileBucket;

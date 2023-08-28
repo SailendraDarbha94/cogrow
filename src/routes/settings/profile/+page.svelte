@@ -2,14 +2,15 @@
 	import { onMount } from 'svelte';
 
 	import goku from '$lib/assets/goku.png';
-	import createUserFileBucket from '$utils/http';
 	import { toastSignal } from '$lib/store';
-	import createHelloWorld from '$utils/http';
 	import { env } from '$env/dynamic/public';
+	import checkAuthAndSetToken from '$utils/auth.js';
+	import upload_file from '$utils/file.js';
 	export let data;
 	onMount(() => {
 		const item = localStorage.getItem('token');
 		connectWebSocket();
+		checkAuthAndSetToken()
 		//console.log(item)
 	});
 
@@ -46,12 +47,12 @@
 
 
 	function createBucket() {
-		createUserFileBucket();
+		//createUserFileBucket();
 		console.log('Creating bucket');
 	}
 
 	function helloWorld() {
-		createHelloWorld();
+		//createHelloWorld();
 		console.log('Hello world');
 	}
 
@@ -73,10 +74,12 @@
 
 	let editingProfile: boolean = false;
 
-	function getTimeDifference() {
+	function getLastSeen(d1:Date = new Date, d2:Date = new Date) {
+
 		let lastSeen: string = '';
-		const date1 = new Date('2023-08-26T13:19:20.303357');
-		const date2 = new Date();
+
+		const date1:Date = new Date('2023-08-26T13:19:20.303357');
+		const date2:Date = new Date();
 
 		const timeDifference = Math.abs(+date2 - +date1);
 		const hoursDifference = Math.floor(Math.min(timeDifference / (1000 * 3600)));
@@ -87,31 +90,39 @@
 		} else {
 			lastSeen = `${hoursDifference / 24} days ago`;
 		}
-        console.log(lastSeen);
+		lastSeen = hoursDifference > 24 ?  Math.floor(Number(hoursDifference / 24)).toString() + " days ago" : Math.floor(Number(hoursDifference / 24)).toString() + " hours ago"
 		return lastSeen;
 	}
+	
+// 	async function uploadFile(e:Event) {
+// 		const formData = new FormData
+// 		console.log("uploading file", files[0])
+// 		formData.append('upload_file', files[0])
+// 		fetch(`${env.PUBLIC_BACKEND_URL}/vectors/upload_vector/`, {
+//         method: 'POST',
+// 		body: formData,
+//         headers: {
+//             accept: 'application/json',
+//             //'Content-Type': 'multipart/form-data',
+//             'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsImtpZCI6IllNWVlmU1BCb1dXL1Z2UU4iLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNjkzMjExOTEzLCJpYXQiOjE2OTMyMDgzMTMsImlzcyI6Imh0dHBzOi8vc2hnaWl5cnZlaWxzZWdqbnl2dWYuc3VwYWJhc2UuY28vYXV0aC92MSIsInN1YiI6ImUxNjY1YjI2LWQ1ZTctNDAxOS1iMDQ1LTc0ZTg0YjJhZGE5MSIsImVtYWlsIjoic2FpbGVuZHJhLmRhcmJoYUBnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6Imdvb2dsZSIsInByb3ZpZGVycyI6WyJnb29nbGUiXX0sInVzZXJfbWV0YWRhdGEiOnsiYXZhdGFyX3VybCI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FBY0hUdGVOR2R6MWNUVmZ4RTFBNjlEVzZJdDlaQS1zR3NraTNRakRaNmh3S0Flcz1zOTYtYyIsImVtYWlsIjoic2FpbGVuZHJhLmRhcmJoYUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZnVsbF9uYW1lIjoiU2FpbGVuZHJhIERhcmJoYSIsImlzcyI6Imh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSIsIm5hbWUiOiJTYWlsZW5kcmEgRGFyYmhhIiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FBY0hUdGVOR2R6MWNUVmZ4RTFBNjlEVzZJdDlaQS1zR3NraTNRakRaNmh3S0Flcz1zOTYtYyIsInByb3ZpZGVyX2lkIjoiMTE2NTI5ODM2OTQyOTE1NTY2NTUwIiwic3ViIjoiMTE2NTI5ODM2OTQyOTE1NTY2NTUwIn0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoib2F1dGgiLCJ0aW1lc3RhbXAiOjE2OTMyMDgzMTN9XSwic2Vzc2lvbl9pZCI6Ijc4YzBiZGMzLWY2YWQtNGNlOC1iM2I5LTg3NWRmNzM5OGVlYiJ9.OsGbzZ4WTjg3idMv6jkl-cioaOcvjRxrcov3yy-z2dg`
+//         }
+//     }).then(async data => {
+//         let newdata = await data.json()
+//         console.log("new data",newdata)
+// 		//successToast(newdata.message)
+//     }).catch((err:Response) => {
+//         toastSignal.update(value => value = "An Error occurred")
+//         console.log(err)
+//     })
+// }
+
 	let files:FileList
 	async function uploadFile(e:Event) {
-		const formData = new FormData
-		console.log("uploading file", files[0])
-		formData.append('upload_file', files[0])
-		fetch(`${env.PUBLIC_BACKEND_URL}/vectors/upload_vector/`, {
-        method: 'POST',
-		body: formData,
-        headers: {
-            accept: 'application/json',
-            //'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsImtpZCI6IllNWVlmU1BCb1dXL1Z2UU4iLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNjkzMjExOTEzLCJpYXQiOjE2OTMyMDgzMTMsImlzcyI6Imh0dHBzOi8vc2hnaWl5cnZlaWxzZWdqbnl2dWYuc3VwYWJhc2UuY28vYXV0aC92MSIsInN1YiI6ImUxNjY1YjI2LWQ1ZTctNDAxOS1iMDQ1LTc0ZTg0YjJhZGE5MSIsImVtYWlsIjoic2FpbGVuZHJhLmRhcmJoYUBnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6Imdvb2dsZSIsInByb3ZpZGVycyI6WyJnb29nbGUiXX0sInVzZXJfbWV0YWRhdGEiOnsiYXZhdGFyX3VybCI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FBY0hUdGVOR2R6MWNUVmZ4RTFBNjlEVzZJdDlaQS1zR3NraTNRakRaNmh3S0Flcz1zOTYtYyIsImVtYWlsIjoic2FpbGVuZHJhLmRhcmJoYUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZnVsbF9uYW1lIjoiU2FpbGVuZHJhIERhcmJoYSIsImlzcyI6Imh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSIsIm5hbWUiOiJTYWlsZW5kcmEgRGFyYmhhIiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FBY0hUdGVOR2R6MWNUVmZ4RTFBNjlEVzZJdDlaQS1zR3NraTNRakRaNmh3S0Flcz1zOTYtYyIsInByb3ZpZGVyX2lkIjoiMTE2NTI5ODM2OTQyOTE1NTY2NTUwIiwic3ViIjoiMTE2NTI5ODM2OTQyOTE1NTY2NTUwIn0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoib2F1dGgiLCJ0aW1lc3RhbXAiOjE2OTMyMDgzMTN9XSwic2Vzc2lvbl9pZCI6Ijc4YzBiZGMzLWY2YWQtNGNlOC1iM2I5LTg3NWRmNzM5OGVlYiJ9.OsGbzZ4WTjg3idMv6jkl-cioaOcvjRxrcov3yy-z2dg`
-        }
-    }).then(async data => {
-        let newdata = await data.json()
-        console.log("new data",newdata)
-		//successToast(newdata.message)
-    }).catch((err:Response) => {
-        toastSignal.update(value => value = "An Error occurred")
-        console.log(err)
-    })
-}
+		let file:File = files[0]
+		await upload_file(file)
+
+	}
+
 </script>
 
 <div class="w-full p-2">
@@ -145,11 +156,12 @@
 			{:else}
 				<p class="h5 my-2">{`${data.user?.phone ? data.user?.phone : 'not available'}`}</p>
 				<p class="h5 my-2">{data.user?.email}</p>
-				<p class="h5 my-2">{getTimeDifference()}</p>
+				<p class="h5 my-2">{getLastSeen()}</p>
 			{/if}
 		</div>
 
 	</div>
+
 	<div class="my-2 py-2">
 		<h3 class="h3">Upload File</h3>
 		<input type="file" bind:files={files}>

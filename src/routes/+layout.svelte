@@ -1,7 +1,6 @@
 <script lang="ts">
 	import '../app.postcss';
 	import { Toast, getToastStore } from '@skeletonlabs/skeleton';
-	import type { ToastSettings } from '@skeletonlabs/skeleton';
 
 	import hljs from 'highlight.js';
 	import 'highlight.js/styles/github-dark.css';
@@ -12,8 +11,8 @@
 	import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
 	import { storePopup } from '@skeletonlabs/skeleton';
 	import Header from '$components/Header.svelte';
-	import { afterUpdate, onMount } from 'svelte';
-	// import { checkAuthAndSetToken } from '$utils/auth';
+	import { onMount } from 'svelte';
+
 	import { toastSignal } from '$lib/store';
 	import AuthenticatedHeader from '$components/AuthenticatedHeader.svelte';
 	import { page } from '$app/stores';
@@ -31,7 +30,7 @@
 	onMount(() => {
 		toastSignal.update(value => value = "Welcome To Smartbag")
 	})
-	console.log(data);
+	console.log(data)
 	toastSignal.subscribe((value) => {
 		if (value) {
 			toastStore.trigger({
