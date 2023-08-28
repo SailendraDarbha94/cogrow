@@ -62,7 +62,7 @@
   <nav class="flex items-center border-b border-zinc-700 p-4 lg:px-6">
     <div class="flex w-1/3 items-center">
       <div class="mr-4" class:active={currentRoute === '/'}>
-        <a href="/" data-sveltekit-prefetch class="">
+        <a href="/app" data-sveltekit-prefetch class="">
           <picture>
             <source srcset={Logo} type="image/png" />
             <img
