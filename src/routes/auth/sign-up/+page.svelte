@@ -56,7 +56,7 @@ import supabase from '$utils/supabase';
 
 		if (userResults?.data?.user?.id) {
 			const users = await supabase
-				.from('settings')
+				.from('userprofile')
 				.insert([{ user_id: userResults.data.user.id, full_name: fullName }])
 				.select();
 

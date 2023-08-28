@@ -1,20 +1,14 @@
+import supabase from '$utils/supabase';
 
-import user from "$lib/store";
-import supabase from "$utils/supabase";
+async function checkAuthAndSetToken() {
+	const { data, error } = await supabase.auth.getSession();
+	if (error) {
+		localStorage.setItem('token', '');
+		console.log(error)
+	}
+	if (data) {
+		localStorage.setItem('token', `Bearer ${data.session?.access_token as string}`)
+	}
+}
 
-export const checkAuthAndSetToken = async () => {
-    const { data, error } = await supabase.auth.getSession()
-    // if (error) {
-    //     return errorToast("An Error has occurred while saving auth Token")
-    // }
-    // if(!data) {
-    //     localStorage.removeItem("token")
-    //     user.set(null)
-    // }
-    if (data) {
-        console.log(data.session?.access_token)
-        localStorage.setItem("token", data.session?.access_token as string)
-        user.set(data.session?.user)
-    }
-    return data.session?.user
-};
+export default checkAuthAndSetToken;

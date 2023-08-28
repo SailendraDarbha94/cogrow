@@ -5,6 +5,7 @@
 	import createUserFileBucket from '$utils/http';
 	import { toastSignal } from '$lib/store';
 	import createHelloWorld from '$utils/http';
+	import { env } from '$env/dynamic/public';
 	export let data;
 	onMount(() => {
 		const item = localStorage.getItem('token');
@@ -12,13 +13,11 @@
 		//console.log(item)
 	});
 
-	let files: any;
 	async function handleImageChange(event: Event) {
 		const input = event.target as HTMLInputElement;
 		if (input.files) {
 			files = input.files;
 			console.log(files);
-			uploadFile(files);
 		}
 	}
 
@@ -45,14 +44,6 @@
 		};
 	}
 
-	function uploadFile(value: any[]) {
-		// && ws.readyState === WebSocket.OPEN
-		if (ws) {
-			ws.send(files);
-		} else {
-			console.error('WebSocket is not open. Unable to send the message.');
-		}
-	}
 
 	function createBucket() {
 		createUserFileBucket();
@@ -99,6 +90,28 @@
         console.log(lastSeen);
 		return lastSeen;
 	}
+	let files:FileList
+	async function uploadFile(e:Event) {
+		const formData = new FormData
+		console.log("uploading file", files[0])
+		formData.append('upload_file', files[0])
+		fetch(`${env.PUBLIC_BACKEND_URL}/vectors/upload_vector/`, {
+        method: 'POST',
+		body: formData,
+        headers: {
+            accept: 'application/json',
+            //'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsImtpZCI6IllNWVlmU1BCb1dXL1Z2UU4iLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNjkzMjExOTEzLCJpYXQiOjE2OTMyMDgzMTMsImlzcyI6Imh0dHBzOi8vc2hnaWl5cnZlaWxzZWdqbnl2dWYuc3VwYWJhc2UuY28vYXV0aC92MSIsInN1YiI6ImUxNjY1YjI2LWQ1ZTctNDAxOS1iMDQ1LTc0ZTg0YjJhZGE5MSIsImVtYWlsIjoic2FpbGVuZHJhLmRhcmJoYUBnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6Imdvb2dsZSIsInByb3ZpZGVycyI6WyJnb29nbGUiXX0sInVzZXJfbWV0YWRhdGEiOnsiYXZhdGFyX3VybCI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FBY0hUdGVOR2R6MWNUVmZ4RTFBNjlEVzZJdDlaQS1zR3NraTNRakRaNmh3S0Flcz1zOTYtYyIsImVtYWlsIjoic2FpbGVuZHJhLmRhcmJoYUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZnVsbF9uYW1lIjoiU2FpbGVuZHJhIERhcmJoYSIsImlzcyI6Imh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSIsIm5hbWUiOiJTYWlsZW5kcmEgRGFyYmhhIiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FBY0hUdGVOR2R6MWNUVmZ4RTFBNjlEVzZJdDlaQS1zR3NraTNRakRaNmh3S0Flcz1zOTYtYyIsInByb3ZpZGVyX2lkIjoiMTE2NTI5ODM2OTQyOTE1NTY2NTUwIiwic3ViIjoiMTE2NTI5ODM2OTQyOTE1NTY2NTUwIn0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoib2F1dGgiLCJ0aW1lc3RhbXAiOjE2OTMyMDgzMTN9XSwic2Vzc2lvbl9pZCI6Ijc4YzBiZGMzLWY2YWQtNGNlOC1iM2I5LTg3NWRmNzM5OGVlYiJ9.OsGbzZ4WTjg3idMv6jkl-cioaOcvjRxrcov3yy-z2dg`
+        }
+    }).then(async data => {
+        let newdata = await data.json()
+        console.log("new data",newdata)
+		//successToast(newdata.message)
+    }).catch((err:Response) => {
+        toastSignal.update(value => value = "An Error occurred")
+        console.log(err)
+    })
+}
 </script>
 
 <div class="w-full p-2">
@@ -136,6 +149,11 @@
 			{/if}
 		</div>
 
+	</div>
+	<div class="my-2 py-2">
+		<h3 class="h3">Upload File</h3>
+		<input type="file" bind:files={files}>
+		<button on:click={uploadFile} class="w-full variant-filled-tertiary m-2 p-2 rounded-md">Upload File</button>
 	</div>
     {#if editingProfile}
     <button on:click={helloWorld} class="w-full variant-filled-tertiary m-2 p-2 rounded-md"

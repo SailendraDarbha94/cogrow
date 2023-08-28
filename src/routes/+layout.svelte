@@ -13,7 +13,7 @@
 	import { storePopup } from '@skeletonlabs/skeleton';
 	import Header from '$components/Header.svelte';
 	import { afterUpdate, onMount } from 'svelte';
-	import { checkAuthAndSetToken } from '$utils/auth';
+	// import { checkAuthAndSetToken } from '$utils/auth';
 	import { toastSignal } from '$lib/store';
 	import AuthenticatedHeader from '$components/AuthenticatedHeader.svelte';
 	import { page } from '$app/stores';
@@ -23,9 +23,9 @@
 	initializeStores();
 	let session: any;
 	export let data;
-	afterUpdate(async () => {
-		session = await checkAuthAndSetToken();
-	});
+	// afterUpdate(async () => {
+	// 	session = await checkAuthAndSetToken();
+	// });
 	const toastStore = getToastStore();
 
 	onMount(() => {
