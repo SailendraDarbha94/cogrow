@@ -1,1 +1,0 @@
-use angularjs1 to create this that way you'll learn it
