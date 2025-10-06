@@ -4,6 +4,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 ## Get started
 5th october 2025
+subete no ymir no tami ni tsugu ore no na wa eren yeager
 1. Install dependencies
 
    ```bash
