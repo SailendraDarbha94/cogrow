@@ -1,7 +1,7 @@
 # Welcome to your Expo app 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
-
+need to change this repo
 ## Get started
 5th october 2025
 subete no ymir no tami ni tsugu ore no na wa eren yeager
