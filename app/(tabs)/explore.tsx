@@ -1,8 +1,6 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -10,6 +8,14 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Fonts } from '@/constants/theme';
 
 export default function TabTwoScreen() {
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState('Push-Ups');
+  const [contender, setContender] = useState<string | null>(null);
+
+  const contenders = [
+    { id: 'sailu', label: 'Sailu', initials: 'SA' },
+    { id: 'cat', label: 'Cat', initials: 'CT' },
+  ];
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
@@ -27,73 +33,72 @@ export default function TabTwoScreen() {
           style={{
             fontFamily: Fonts.rounded,
           }}>
-          Explore
+          New Entry
         </ThemedText>
       </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
+      {/* Top card with dropdown */}
+      <ThemedView style={styles.card}>
+        <ThemedText type="defaultSemiBold" style={styles.cardTitle}>
+          Select workout
         </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
+        <View style={styles.dropdownContainer}>
+          <TouchableOpacity
+            onPress={() => setOpen((v) => !v)}
+            style={styles.dropdownButton}
+            activeOpacity={0.8}>
+            <ThemedText>{selected}</ThemedText>
+            <IconSymbol name="chevron.right" size={18} color="#666" style={{ marginLeft: 8 }} />
+          </TouchableOpacity>
+          {open && (
+            <View style={styles.options}>
+              <TouchableOpacity
+                style={styles.option}
+                onPress={() => {
+                  setSelected('Push-Ups');
+                  setOpen(false);
+                }}>
+                <ThemedText>Push-Ups</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.option}
+                onPress={() => {
+                  setSelected('Plank');
+                  setOpen(false);
+                }}>
+                <ThemedText>Plank</ThemedText>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </ThemedView>
+
+      {/* Select Contender card */}
+      <ThemedView style={styles.card}>
+        <ThemedText type="defaultSemiBold" style={styles.cardTitle}>
+          Select contender
         </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
+        <View style={styles.contenderRow}>
+          {contenders.map((c) => (
+            <TouchableOpacity
+              key={c.id}
+              onPress={() => setContender(c.id)}
+              style={[
+                styles.contenderAvatar,
+                contender === c.id && styles.contenderAvatarSelected,
+              ]}
+              activeOpacity={0.8}>
+              <ThemedText style={styles.contenderInitials}>{c.initials}</ThemedText>
+              <ThemedText style={styles.contenderLabel}>{c.label}</ThemedText>
+            </TouchableOpacity>
+          ))}
+          <TouchableOpacity
+            style={styles.contenderAdd}
+            activeOpacity={0.8}>
+            <IconSymbol name="plus" size={22} color="#888" />
+            <ThemedText style={styles.contenderLabel}>Add</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ThemedView>
     </ParallaxScrollView>
   );
 }
@@ -108,5 +113,84 @@ const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
     gap: 8,
+  },
+  card: {
+    marginHorizontal: 12,
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: Platform.select({ web: '#fff', default: '#fff' }),
+    // shadow
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+  },
+  cardTitle: {
+    marginBottom: 8,
+  },
+  dropdownContainer: {
+    position: 'relative',
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#f7f7f7',
+  },
+  options: {
+    marginTop: 8,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  option: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  contenderRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'center',
+  },
+  contenderAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#e0e7ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  contenderAvatarSelected: {
+    borderColor: '#6366f1',
+  },
+  contenderAdd: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#f3f4f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#ccc',
+  },
+  contenderInitials: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#6366f1',
+  },
+  contenderLabel: {
+    fontSize: 10,
+    marginTop: 2,
+    color: '#555',
   },
 });
