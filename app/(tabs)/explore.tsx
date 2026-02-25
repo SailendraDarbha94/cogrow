@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 
@@ -16,6 +17,19 @@ export default function TabTwoScreen() {
     { id: 'sailu', label: 'Sailu', initials: 'SA' },
     { id: 'cat', label: 'Cat', initials: 'CT' },
   ];
+  const router = useRouter();
+
+  const handleContenderSelect = (contenderId:any) => {
+    setContender(contenderId);
+    const selectedContender = contenders.find((c) => c.id === contenderId);
+    if (selectedContender) {
+      router.push({
+        pathname: '/(tabs)/challenge',
+        params: { friendName: selectedContender.label, challengeType: selected },
+      });
+    }
+  };
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
@@ -81,7 +95,7 @@ export default function TabTwoScreen() {
           {contenders.map((c) => (
             <TouchableOpacity
               key={c.id}
-              onPress={() => setContender(c.id)}
+              onPress={() => handleContenderSelect(c.id)}
               style={[
                 styles.contenderAvatar,
                 contender === c.id && styles.contenderAvatarSelected,
