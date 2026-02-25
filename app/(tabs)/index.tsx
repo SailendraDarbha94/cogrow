@@ -1,98 +1,241 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Fonts } from '@/constants/theme';
+import { auth, db } from '@/firebaseConfig';
+import { useRouter } from 'expo-router';
+import { onAuthStateChanged } from 'firebase/auth';
+import { get, ref } from 'firebase/database';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  View
+} from 'react-native';
+
+type Challenge = {
+  key: string;
+  challenger: string;
+  challengerUid: string;
+  contender: string;
+  challengeType: string;
+  status: 'pending' | 'awaiting_approval' | 'completed';
+  createdAt: number;
+};
+
+const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
+  pending:           { label: 'Pending',            color: '#b45309', bg: '#fef3c7' },
+  awaiting_approval: { label: 'Awaiting Approval',  color: '#1d4ed8', bg: '#dbeafe' },
+  completed:         { label: 'Completed',           color: '#15803d', bg: '#dcfce7' },
+};
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchChallenges = async (email: string) => {
+    try {
+      const snap = await get(ref(db, 'challenges'));
+      if (snap.exists()) {
+        const data = snap.val() as Record<string, Omit<Challenge, 'key'>>;
+        const list = Object.entries(data)
+          .map(([key, val]) => ({ key, ...val }))
+          .filter((c) => c.challenger === email);
+        list.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+        setChallenges(list);
+      } else {
+        setChallenges([]);
+      }
+    } catch (e) {
+      console.error('Failed to fetch challenges:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Wait for Firebase Auth to restore session before fetching
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user?.email) {
+        fetchChallenges(user.email);
+      } else {
+        setLoading(false);
+        setChallenges([]);
+      }
+    });
+    return unsub;
+  }, []);
+
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+      headerBackgroundColor={{ light: '#e0e7ff', dark: '#1e1b4b' }}
       headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+        <IconSymbol
+          size={260}
+          color="#6366f1"
+          name="house.fill"
+          style={styles.headerIcon}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
+      }
+      >
+
+      <ThemedView style={styles.titleContainer}>
+        <ThemedText type="title" style={{ fontFamily: Fonts.rounded }}>
+          Dashboard
         </ThemedText>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
+
+      <ThemedText style={styles.sectionLabel}>Active Challenges</ThemedText>
+
+      {loading ? (
+        <ActivityIndicator size="large" color="#6366f1" style={{ marginTop: 32 }} />
+      ) : challenges.length === 0 ? (
+        <ThemedView style={styles.emptyCard}>
+          <ThemedText style={styles.emptyText}>No active challenges yet.</ThemedText>
+          <ThemedText style={styles.emptyHint}>
+            Head to the + tab to start a new challenge!
+          </ThemedText>
+        </ThemedView>
+      ) : (
+        challenges.map((c) => {
+          const s = STATUS_META[c.status] ?? STATUS_META['pending'];
+          return (
+            <TouchableOpacity
+              key={c.key}
+              style={styles.card}
+              activeOpacity={0.8}
+              onPress={() =>
+                router.push({ pathname: '/(tabs)/challenge', params: { challengeKey: c.key } })
+              }>
+              {/* Header row */}
+              <View style={styles.cardHeader}>
+                <ThemedText type="defaultSemiBold" style={styles.challengeType}>
+                  {c.challengeType}
+                </ThemedText>
+                <View style={[styles.statusBadge, { backgroundColor: s.bg }]}>
+                  <ThemedText style={[styles.statusText, { color: s.color }]}>
+                    {s.label}
+                  </ThemedText>
+                </View>
+              </View>
+
+              {/* Details row */}
+              <View style={styles.detailsRow}>
+                <View style={styles.detailItem}>
+                  <ThemedText style={styles.detailLabel}>You</ThemedText>
+                  <ThemedText style={styles.detailValue}>{c.challenger}</ThemedText>
+                </View>
+                <ThemedText style={styles.vsText}>vs</ThemedText>
+                <View style={[styles.detailItem, { alignItems: 'flex-end' }]}>
+                  <ThemedText style={styles.detailLabel}>Contender</ThemedText>
+                  <ThemedText style={styles.detailValue}>{c.contender}</ThemedText>
+                </View>
+              </View>
+            </TouchableOpacity>
+          );
+        })
+      )}
     </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  headerIcon: {
+    color: '#6366f1',
+    bottom: -60,
+    left: -20,
+    position: 'absolute',
+  },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  sectionLabel: {
+    fontSize: 13,
+    color: '#888',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginTop: 8,
+    marginHorizontal: 4,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  card: {
+    marginHorizontal: 2,
+    marginTop: 12,
+    padding: 16,
+    borderRadius: 14,
+    backgroundColor: Platform.select({ web: '#fff', default: '#fff' }),
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  challengeType: {
+    fontSize: 16,
+    color: '#111',
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  detailItem: {
+    flex: 1,
+  },
+  detailLabel: {
+    fontSize: 11,
+    color: '#aaa',
+    marginBottom: 2,
+  },
+  detailValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  vsText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#6366f1',
+    marginHorizontal: 12,
+  },
+  emptyCard: {
+    marginTop: 24,
+    padding: 24,
+    borderRadius: 14,
+    backgroundColor: '#f5f3ff',
+    alignItems: 'center',
+    gap: 6,
+  },
+  emptyText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#6366f1',
+  },
+  emptyHint: {
+    fontSize: 13,
+    color: '#888',
+    textAlign: 'center',
   },
 });

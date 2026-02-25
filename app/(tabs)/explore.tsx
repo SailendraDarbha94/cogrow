@@ -1,21 +1,53 @@
-import React, { useState } from 'react';
-import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
-
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Fonts } from '@/constants/theme';
+import { auth, db } from '@/firebaseConfig';
+import { router } from 'expo-router';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { push, ref, serverTimestamp } from 'firebase/database';
+import React, { useEffect, useState } from 'react';
+import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function TabTwoScreen() {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState('Push-Ups');
   const [contender, setContender] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null | undefined>(undefined);
 
   const contenders = [
     { id: 'sailu', label: 'Sailu', initials: 'SA' },
     { id: 'cat', label: 'Cat', initials: 'CT' },
   ];
+
+    useEffect(() => {
+      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        setUser(firebaseUser);
+      });
+      return unsubscribe;
+    }, []);
+
+  const createChallengeInFirebase = async ({ contender, challengeType }: any) => {
+    const userName = user?.email;
+    const uid = user?.uid;
+    try {
+      const newRef = await push(ref(db, 'challenges'), {
+        challenger: userName ?? null,
+        challengerUid: uid ?? null,
+        contender,
+        challengeType,
+        status: 'pending',
+        createdAt: serverTimestamp(),
+      });
+      console.log('Created challenge key:', newRef.key);
+      return newRef.key;
+    } catch (e) {
+      console.error('Failed to create challenge:', e);
+      return null;
+    }
+  }
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
@@ -99,6 +131,25 @@ export default function TabTwoScreen() {
           </TouchableOpacity>
         </View>
       </ThemedView>
+
+      <TouchableOpacity
+        style={[styles.startButton, !contender && styles.startButtonDisabled]}
+        activeOpacity={0.85}
+        disabled={!contender}
+        onPress={async () => {
+          const selectedContender = contenders.find((c) => c.id === contender);
+          if (selectedContender) {
+            const key = await createChallengeInFirebase({ contender: selectedContender.label, challengeType: selected });
+            if (key) {
+              router.push({
+                pathname: '/(tabs)/challenge',
+                params: { challengeKey: key },
+              });
+            }
+          }
+        }}>
+        <ThemedText style={styles.startButtonText}>Start</ThemedText>
+      </TouchableOpacity>
     </ParallaxScrollView>
   );
 }
@@ -192,5 +243,21 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginTop: 2,
     color: '#555',
+  },
+  startButton: {
+    marginHorizontal: 12,
+    marginTop: 20,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: '#6366f1',
+    alignItems: 'center',
+  },
+  startButtonDisabled: {
+    backgroundColor: '#c7c7c7',
+  },
+  startButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
   },
 });
