@@ -4,10 +4,11 @@ import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Fonts } from '@/constants/theme';
 import { auth, db } from '@/firebaseConfig';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { onAuthStateChanged } from 'firebase/auth';
 import { get, ref, remove } from 'firebase/database';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -91,8 +92,11 @@ export default function HomeScreen() {
   };
 
   // Wait for Firebase Auth to restore session before fetching
+  const emailRef = useRef<string | null>(null);
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
+      emailRef.current = user?.email ?? null;
       if (user?.email) {
         fetchChallenges(user.email);
       } else {
@@ -102,6 +106,15 @@ export default function HomeScreen() {
     });
     return unsub;
   }, []);
+
+  // Refresh every time the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (emailRef.current) {
+        fetchChallenges(emailRef.current);
+      }
+    }, [])
+  );
 
   return (
     <ParallaxScrollView

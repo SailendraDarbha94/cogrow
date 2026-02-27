@@ -4,7 +4,8 @@ import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Fonts } from '@/constants/theme';
 import { auth, db, storage } from '@/firebaseConfig';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { onAuthStateChanged } from 'firebase/auth';
 import { get, ref, update } from 'firebase/database';
 import { getDownloadURL, listAll, ref as storageRef } from 'firebase/storage';
@@ -12,7 +13,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
-    Linking,
     StyleSheet,
     TouchableOpacity,
     View
@@ -54,6 +54,10 @@ function TileCard({ children, style }: { children: React.ReactNode; style?: obje
 }
 
 function VideoTile({ videoUrl }: { videoUrl: string | null | undefined }) {
+  const player = useVideoPlayer(videoUrl ?? null, (p) => {
+    p.loop = false;
+  });
+
   if (!videoUrl) {
     return (
       <TileCard>
@@ -65,16 +69,14 @@ function VideoTile({ videoUrl }: { videoUrl: string | null | undefined }) {
     );
   }
   return (
-    <TileCard>
-      <TouchableOpacity
-        style={styles.videoPlaceholder}
-        onPress={() => Linking.openURL(videoUrl)}
-        activeOpacity={0.75}>
-        <View style={styles.playIconCircle}>
-          <IconSymbol name="play.fill" size={22} color="#fff" />
-        </View>
-        <ThemedText style={styles.tileSubLabel}>Tap to view</ThemedText>
-      </TouchableOpacity>
+    <TileCard style={{ padding: 0, overflow: 'hidden' }}>
+      <VideoView
+        player={player}
+        style={styles.videoPlayer}
+        allowsFullscreen
+        allowsPictureInPicture={false}
+        nativeControls
+      />
     </TileCard>
   );
 }
@@ -154,6 +156,13 @@ export default function ChallengeDashboardScreen() {
   }, [challengeKey, myEmail, authReady]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
+
+  // Re-fetch every time the screen comes into focus (e.g. after uploading evidence)
+  useFocusEffect(
+    useCallback(() => {
+      if (authReady) loadAll();
+    }, [authReady, loadAll])
+  );
 
   const handleApprove = async (decision: 'approved' | 'rejected') => {
     if (!challenge || !challengeKey) return;
@@ -314,7 +323,7 @@ export default function ChallengeDashboardScreen() {
                     {APPROVAL_META[oppApproval].label}
                   </ThemedText>
                 </View>
-              ) : (
+              ) : oppSubmission?.score && oppVideoUrl ? (
                 <View style={styles.verdictButtons}>
                   <TouchableOpacity
                     style={[styles.verdictBtn, styles.approveBtn]}
@@ -333,6 +342,10 @@ export default function ChallengeDashboardScreen() {
                     <ThemedText style={styles.verdictBtnText}>✗</ThemedText>
                   </TouchableOpacity>
                 </View>
+              ) : (
+                <ThemedText style={[styles.tileSubLabel, { color: '#aaa' }]}>
+                  Awaiting attempt
+                </ThemedText>
               )}
             </TileCard>
           </View>
@@ -427,7 +440,7 @@ const styles = StyleSheet.create({
 
   // Tiles row
   tilesRow: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: 8,
   },
   tile: {
@@ -500,13 +513,10 @@ const styles = StyleSheet.create({
     gap: 6,
     width: '100%',
   },
-  playIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#6366f1',
-    alignItems: 'center',
-    justifyContent: 'center',
+  videoPlayer: {
+    width: '100%',
+    height: 210,
+    borderRadius: 12,
   },
 
   // Verdict buttons

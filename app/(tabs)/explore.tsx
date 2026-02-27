@@ -124,7 +124,7 @@ export default function TabTwoScreen() {
           const key = await createChallengeInFirebase({ contender: contenderEmail.trim(), challengeType: selected });
           if (key) {
             router.push({
-              pathname: '/(tabs)/challenge',
+              pathname: '/(tabs)/challenge-dashboard',
               params: { challengeKey: key },
             });
           }

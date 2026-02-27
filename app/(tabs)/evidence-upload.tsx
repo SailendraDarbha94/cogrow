@@ -6,7 +6,7 @@ import { Fonts } from '@/constants/theme';
 import { auth, db, storage } from '@/firebaseConfig';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { get, ref } from 'firebase/database';
+import { get, ref, update } from 'firebase/database';
 import { ref as storageRef, uploadBytes } from 'firebase/storage';
 import React, { useEffect, useState } from 'react';
 import {
@@ -56,7 +56,7 @@ export default function EvidenceUploadScreen() {
       quality: 1,
       videoExportPreset: ImagePicker.VideoExportPreset.Passthrough,
       ...(Platform.OS === 'ios' && {
-        videoExportPreset: ImagePicker.VideoExportPreset.H264_1280x720,
+        videoExportPreset: ImagePicker.VideoExportPreset.H264_960x540,
       }),
     });
     if (!result.canceled) {
@@ -68,13 +68,25 @@ export default function EvidenceUploadScreen() {
     if (!video) return;
     setUploading(true);
     const userEmail = auth.currentUser?.email;
+    if (!userEmail) { setUploading(false); return; }
+    const encodedEmail = userEmail.replace(/\./g, ',');
     const fileName = video.split('/').pop() ?? 'video.mp4';
+    // Upload video to Storage
     const videoRef = storageRef(storage, `challenges/${challengeKey}/${userEmail}/${fileName}`);
     const response = await fetch(video);
     const blob = await response.blob();
     await uploadBytes(videoRef, blob);
+    // Write score + approval status to RTDB
+    await update(ref(db, `challenges/${challengeKey}/submissions/${encodedEmail}`), {
+      score: metric ?? null,
+      approvalStatus: 'sent_for_approval',
+    });
     setUploading(false);
     setSent(true);
+    router.replace({
+      pathname: '/(tabs)/challenge-dashboard',
+      params: { challengeKey },
+    });
   };
 
   return (
