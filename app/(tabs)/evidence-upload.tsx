@@ -3,10 +3,11 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Fonts } from '@/constants/theme';
-import { db } from '@/firebaseConfig';
+import { auth, db, storage } from '@/firebaseConfig';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { get, ref } from 'firebase/database';
+import { ref as storageRef, uploadBytes } from 'firebase/storage';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -53,6 +54,10 @@ export default function EvidenceUploadScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Videos,
       allowsEditing: true,
       quality: 1,
+      videoExportPreset: ImagePicker.VideoExportPreset.Passthrough,
+      ...(Platform.OS === 'ios' && {
+        videoExportPreset: ImagePicker.VideoExportPreset.H264_1280x720,
+      }),
     });
     if (!result.canceled) {
       setVideo(result.assets[0].uri);
@@ -62,8 +67,12 @@ export default function EvidenceUploadScreen() {
   const handleSend = async () => {
     if (!video) return;
     setUploading(true);
-    // TODO: upload video to Firebase Storage and write challenge record to RTDB
-    await new Promise((r) => setTimeout(r, 1500)); // simulate upload
+    const userEmail = auth.currentUser?.email;
+    const fileName = video.split('/').pop() ?? 'video.mp4';
+    const videoRef = storageRef(storage, `challenges/${challengeKey}/${userEmail}/${fileName}`);
+    const response = await fetch(video);
+    const blob = await response.blob();
+    await uploadBytes(videoRef, blob);
     setUploading(false);
     setSent(true);
   };

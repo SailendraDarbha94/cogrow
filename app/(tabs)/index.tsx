@@ -36,6 +36,7 @@ const STATUS_META: Record<string, { label: string; color: string; bg: string }> 
 export default function HomeScreen() {
   const router = useRouter();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [invites, setInvites] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
 
   const deleteChallenge = (key: string) => {
@@ -66,13 +67,21 @@ export default function HomeScreen() {
       const snap = await get(ref(db, 'challenges'));
       if (snap.exists()) {
         const data = snap.val() as Record<string, Omit<Challenge, 'key'>>;
-        const list = Object.entries(data)
-          .map(([key, val]) => ({ key, ...val }))
-          .filter((c) => c.challenger === email);
-        list.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
-        setChallenges(list);
+        const all = Object.entries(data).map(([key, val]) => ({ key, ...val }));
+
+        const mine = all
+          .filter((c) => c.challenger === email)
+          .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+
+        const incoming = all
+          .filter((c) => c.contender === email)
+          .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+
+        setChallenges(mine);
+        setInvites(incoming);
       } else {
         setChallenges([]);
+        setInvites([]);
       }
     } catch (e) {
       console.error('Failed to fetch challenges:', e);
@@ -166,6 +175,55 @@ export default function HomeScreen() {
                 <ThemedText style={styles.vsText}>vs</ThemedText>
                 <View style={[styles.detailItem, { alignItems: 'flex-end' }]}>
                   <ThemedText style={styles.detailLabel}>Contender</ThemedText>
+                  <ThemedText style={styles.detailValue}>{c.contender}</ThemedText>
+                </View>
+              </View>
+            </TouchableOpacity>
+          );
+        })
+      )}
+      {/* ── Invites ── */}
+      {/* <ThemedText style={[styles.sectionLabel, { marginTop: 24 }]}>Invites</ThemedText> */}
+
+      {loading ? null : invites.length === 0 ? (
+        <ThemedView style={styles.emptyCard}>
+          <ThemedText style={styles.emptyText}>No invites yet.</ThemedText>
+          <ThemedText style={styles.emptyHint}>
+            When someone challenges you, it will appear here.
+          </ThemedText>
+        </ThemedView>
+      ) : (
+        invites.map((c) => {
+          const s = STATUS_META[c.status] ?? STATUS_META['pending'];
+          return (
+            <TouchableOpacity
+              key={c.key}
+              style={styles.card}
+              activeOpacity={0.8}
+              onPress={() =>
+                router.push({ pathname: '/(tabs)/challenge', params: { challengeKey: c.key } })
+              }>
+              {/* Header row */}
+              <View style={styles.cardHeader}>
+                <ThemedText type="defaultSemiBold" style={styles.challengeType}>
+                  {c.challengeType}
+                </ThemedText>
+                <View style={[styles.statusBadge, { backgroundColor: s.bg }]}>
+                  <ThemedText style={[styles.statusText, { color: s.color }]}>
+                    {s.label}
+                  </ThemedText>
+                </View>
+              </View>
+
+              {/* Details row */}
+              <View style={styles.detailsRow}>
+                <View style={styles.detailItem}>
+                  <ThemedText style={styles.detailLabel}>Challenger</ThemedText>
+                  <ThemedText style={styles.detailValue}>{c.challenger}</ThemedText>
+                </View>
+                <ThemedText style={styles.vsText}>vs</ThemedText>
+                <View style={[styles.detailItem, { alignItems: 'flex-end' }]}>
+                  <ThemedText style={styles.detailLabel}>You</ThemedText>
                   <ThemedText style={styles.detailValue}>{c.contender}</ThemedText>
                 </View>
               </View>
