@@ -8,18 +8,13 @@ import { router } from 'expo-router';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { push, ref, serverTimestamp } from 'firebase/database';
 import React, { useEffect, useState } from 'react';
-import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function TabTwoScreen() {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState('Push-Ups');
-  const [contender, setContender] = useState<string | null>(null);
+  const [contenderEmail, setContenderEmail] = useState('');
   const [user, setUser] = useState<User | null | undefined>(undefined);
-
-  const contenders = [
-    { id: 'sailu', label: 'Sailu', initials: 'SA' },
-    { id: 'cat', label: 'Cat', initials: 'CT' },
-  ];
 
     useEffect(() => {
       const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -104,48 +99,34 @@ export default function TabTwoScreen() {
         </View>
       </ThemedView>
 
-      {/* Select Contender card */}
+      {/* Contender email card */}
       <ThemedView style={styles.card}>
         <ThemedText type="defaultSemiBold" style={styles.cardTitle}>
-          Select contender
+          Contender's email
         </ThemedText>
-        <View style={styles.contenderRow}>
-          {contenders.map((c) => (
-            <TouchableOpacity
-              key={c.id}
-              onPress={() => setContender(c.id)}
-              style={[
-                styles.contenderAvatar,
-                contender === c.id && styles.contenderAvatarSelected,
-              ]}
-              activeOpacity={0.8}>
-              <ThemedText style={styles.contenderInitials}>{c.initials}</ThemedText>
-              <ThemedText style={styles.contenderLabel}>{c.label}</ThemedText>
-            </TouchableOpacity>
-          ))}
-          <TouchableOpacity
-            style={styles.contenderAdd}
-            activeOpacity={0.8}>
-            <IconSymbol name="plus" size={22} color="#888" />
-            <ThemedText style={styles.contenderLabel}>Add</ThemedText>
-          </TouchableOpacity>
-        </View>
+        <TextInput
+          style={styles.emailInput}
+          placeholder="e.g. friend@example.com"
+          placeholderTextColor="#aaa"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          value={contenderEmail}
+          onChangeText={setContenderEmail}
+        />
       </ThemedView>
 
       <TouchableOpacity
-        style={[styles.startButton, !contender && styles.startButtonDisabled]}
+        style={[styles.startButton, !contenderEmail.trim() && styles.startButtonDisabled]}
         activeOpacity={0.85}
-        disabled={!contender}
+        disabled={!contenderEmail.trim()}
         onPress={async () => {
-          const selectedContender = contenders.find((c) => c.id === contender);
-          if (selectedContender) {
-            const key = await createChallengeInFirebase({ contender: selectedContender.label, challengeType: selected });
-            if (key) {
-              router.push({
-                pathname: '/(tabs)/challenge',
-                params: { challengeKey: key },
-              });
-            }
+          const key = await createChallengeInFirebase({ contender: contenderEmail.trim(), challengeType: selected });
+          if (key) {
+            router.push({
+              pathname: '/(tabs)/challenge',
+              params: { challengeKey: key },
+            });
           }
         }}>
         <ThemedText style={styles.startButtonText}>Start</ThemedText>
@@ -205,44 +186,15 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
   },
-  contenderRow: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
-  },
-  contenderAvatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#e0e7ff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  contenderAvatarSelected: {
-    borderColor: '#6366f1',
-  },
-  contenderAdd: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#f3f4f6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: '#ccc',
-  },
-  contenderInitials: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#6366f1',
-  },
-  contenderLabel: {
-    fontSize: 10,
-    marginTop: 2,
-    color: '#555',
+  emailInput: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#f7f7f7',
+    fontSize: 14,
+    color: '#111',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   startButton: {
     marginHorizontal: 12,

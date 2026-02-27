@@ -6,10 +6,11 @@ import { Fonts } from '@/constants/theme';
 import { auth, db } from '@/firebaseConfig';
 import { useRouter } from 'expo-router';
 import { onAuthStateChanged } from 'firebase/auth';
-import { get, ref } from 'firebase/database';
+import { get, ref, remove } from 'firebase/database';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Platform,
   StyleSheet,
   TouchableOpacity,
@@ -36,6 +37,29 @@ export default function HomeScreen() {
   const router = useRouter();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const deleteChallenge = (key: string) => {
+    Alert.alert(
+      'Delete Challenge',
+      'Are you sure you want to delete this challenge?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await remove(ref(db, `challenges/${key}`));
+              setChallenges((prev) => prev.filter((c) => c.key !== key));
+            } catch (e) {
+              console.error('Failed to delete challenge:', e);
+              Alert.alert('Error', 'Failed to delete challenge. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const fetchChallenges = async (email: string) => {
     try {
@@ -117,10 +141,19 @@ export default function HomeScreen() {
                 <ThemedText type="defaultSemiBold" style={styles.challengeType}>
                   {c.challengeType}
                 </ThemedText>
-                <View style={[styles.statusBadge, { backgroundColor: s.bg }]}>
-                  <ThemedText style={[styles.statusText, { color: s.color }]}>
-                    {s.label}
-                  </ThemedText>
+                <View style={styles.cardHeaderRight}>
+                  <View style={[styles.statusBadge, { backgroundColor: s.bg }]}>
+                    <ThemedText style={[styles.statusText, { color: s.color }]}>
+                      {s.label}
+                    </ThemedText>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={(e) => { e.stopPropagation(); deleteChallenge(c.key); }}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <IconSymbol name="trash" size={15} color="#ef4444" />
+                  </TouchableOpacity>
                 </View>
               </View>
 
@@ -182,6 +215,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 12,
+  },
+  cardHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  deleteButton: {
+    padding: 4,
   },
   challengeType: {
     fontSize: 16,
