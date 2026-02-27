@@ -143,7 +143,7 @@ export default function HomeScreen() {
               style={styles.card}
               activeOpacity={0.8}
               onPress={() =>
-                router.push({ pathname: '/(tabs)/challenge', params: { challengeKey: c.key } })
+                router.push({ pathname: '/(tabs)/challenge-dashboard', params: { challengeKey: c.key } })
               }>
               {/* Header row */}
               <View style={styles.cardHeader}>
@@ -201,7 +201,7 @@ export default function HomeScreen() {
               style={styles.card}
               activeOpacity={0.8}
               onPress={() =>
-                router.push({ pathname: '/(tabs)/challenge', params: { challengeKey: c.key } })
+                router.push({ pathname: '/(tabs)/challenge-dashboard', params: { challengeKey: c.key } })
               }>
               {/* Header row */}
               <View style={styles.cardHeader}>
